@@ -1,0 +1,236 @@
+\documentclass[uplatex,dvipdfmx,a4paper,10pt]{jsarticle}
+
+\usepackage{geometry}
+%\geometry{left=3cm, right=2cm, top=2cm, bottom=3cm}
+
+%\usepackage[draft]{graphicx, color}
+%https://qiita.com/zr_tex8r/items/442b75b452b11bee8049
+%\usepackage$draft${graphicx}% dvipdfmx は自動的に有効になる
+$draft$% dvipdfmx は自動的に有効になる
+\usepackage[dvipdfmx]{color}% dvipdfmx は自動的に有効になるらしい
+
+\usepackage{multicol}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage[version=3]{mhchem}
+\usepackage{chemfig}
+\usepackage{bigfoot}
+\usepackage{longtable} % 表組みに必要
+\usepackage{booktabs} % 表組みに必要
+\usepackage{subfig} % 図の横並び表示に必要
+\usepackage{siunitx} % SI単位（国際単位系）を出力
+\usepackage{here} 
+\usepackage{pdfpages}
+
+%http://konoyonohana.blog.fc2.com/blog-entry-58.html 
+%エラー対応　“Too deeply nested.”　5階以上のネスト
+\usepackage{enumerate}
+\usepackage{enumitem}
+\setlistdepth{20}
+\renewlist{itemize}{itemize}{20}
+\setlist[itemize]{label=\textbullet}
+
+
+
+%https://ameblo.jp/h-krkr/entry-10908206471.html
+\usepackage{mikibase}
+
+\usepackage[%
+	hidelinks,%
+	pdfusetitle,%
+	colorlinks=false,%
+	bookmarks=true, % 以下ブックマークに関する設定
+	bookmarksnumbered=true,%
+	pdfborder={0 0 0},%
+	bookmarkstype=toc,%
+	pdftitle={$title$},%
+	pdfauthor={$first$$last$}%
+]{hyperref}
+\title{$experiment-number$ $title$}
+\author{$student-number$ $first$ $last$}
+\usepackage{pxjahyper}
+\usepackage{url}
+\urlstyle{sf}
+
+
+\usepackage[dvipdfmx]{pdfcomment}
+\AtBeginDocument{\special{pdf:tounicode UTF8-UTF16}}
+\usepackage{xcolor}
+%\usepackage[x11names]{xcolor}
+%\hypersetup{unicode}
+\definecolor{myblue}{RGB}{187,254,237}
+
+%\pdfmargincomment[icon=Note,color=myblue]{}
+
+
+\usepackage{comment}
+
+%\usepackage[backend=bibtex]{biblatex}
+%\usepackage[backend=bibtex,style=numeric]{biblatex}
+%\usepackage[backend=bibtex,style=ieee]{biblatex}
+\usepackage[backend=biber,style=ieee]{biblatex}
+%\bibliography{sample.bib}
+\DeclarePrefChars{'-} % https://oku.edu.mie-u.ac.jp/tex/mod/forum/discuss.php?d=2313
+\addbibresource{references.bib}
+
+
+
+\newcommand*{\ppa}{%
+	\ifthenelse{\boolean{mmode}}%
+		{\mathrm{p}K_\mathrm{a}}%
+		{\(\mathrm{p}K_\mathrm{a}\)}%
+	}%
+
+\newcommand*{\ppb}{%
+	\ifthenelse{\boolean{mmode}}%
+		{\mathrm{p}K_\mathrm{b}}%
+		{\(\mathrm{p}K_\mathrm{b}\)}%
+	}%
+
+\newcommand*{\pph}{%
+	\ifthenelse{\boolean{mmode}}%
+		{\mathrm{pH}}%
+		{\(\mathrm{pH}\)}%
+	}%
+
+\newcommand*{\diff}{%
+	\ifthenelse{\boolean{mmode}}%
+		{\mathrm{d}}%
+		{\(\mathrm{d}\)}%
+	}%
+
+\usepackage{mathrsfs}%花文字
+%筆記体はmathcal
+
+
+%https://orumin.blogspot.com/2017/09/biblatex.html
+\AtEveryBibitem{%
+\ifentrytype{article}{%
+}{}
+\ifentrytype{inproceedings}{%
+\clearfield{volume}
+\clearfield{number}
+}{}
+\clearlist{publisher}
+\clearfield{isbn}
+\clearlist{location}
+\clearfield{doi}
+\clearfield{url}
+}
+
+\renewbibmacro{in:}{%
+\ifentrytype{inproceedings}{%
+  \setunit{}
+  \addperiod\addspace In \textit{Proc.\ of the}}%
+{\printtext{\bibstring{in}\intitlepunct}}
+}
+
+\renewbibmacro*{series+number:emphcond}{%
+\ifentrytype{inproceedings}{%
+  \printtext{(}\printfield{series}\printtext{)}\setunit*{\addcomma\space}\newunit}%
+{%
+  \printfield{number}%
+  \setunit*{\addspace\bibstring{inseries}\addspace}%
+  \ifboolexpr{%
+    not test {\iffieldundef{volume}}
+  }%
+   {\printfield{series}}%
+   {\ifboolexpr{%
+       test {\iffieldundef{volume}}
+       and
+       test {\iffieldundef{part}}
+       and
+       test {\iffieldundef{number}}
+       and
+       test {\ifentrytype{book}}
+     }%
+      {\newunit\newblock}%
+      {}%
+    \printfield[noformat]{series}}%
+  \newunit}
+}
+
+
+
+
+\usepackage[jis2004]{otf}
+
+
+% prevent hyphenation
+\hyphenpenalty=10000\relax
+\exhyphenpenalty=10000\relax
+\sloppy
+
+
+%行間調整
+%\renewcommand\baselinestretch{0.8} 
+
+\usepackage{setspace} %% for spacing
+%\begin{spacing}{0.7}
+%hogehogehogehoge
+%\end{spacing}
+
+%脚注番号を （1）に変更
+%\renewcommand\thefootnote{（\arabic{footnote}）}
+%脚注番号を 1）に変更
+\renewcommand\thefootnote{\arabic{footnote}）}
+\newcommand{\vect}[1]{\mbox{\boldmath \(#1\)}}
+\newcommand*{\uni}[2][]{
+	\ifthenelse{\boolean{mmode}}{#1\,\si{#2}}{\(#1\,\si{#2}\)}}
+\newcommand*{\pomment}[2][icon=Note,color=myblue]{
+	\pdfmargincomment[#1]
+	{#2}
+	}
+	
+$abstractname$
+	
+	
+%\newcommand*{\myfig}[4][width=10cm]{\begin{figure}[H]\centering %\includegraphics[#1]{#2} \caption{#3} \label{fig:#4} \end{figure}}
+
+
+% http://nos.hateblo.jp/entry/20081015/1224084491
+%\newcommand{\fig}[3][width=15cm]{
+%\begin{figure}[ht]
+%\begin{center}
+% \includegraphics[#1]{figs/#2}
+%\end{center}
+%\caption{#3}
+%\label{fig:#2}
+%\end{figure}}
+
+%\newcommand{\fref}[1]{図\ref{fig:#1}}
+
+%\renewcommand{\abstractname}{概要}
+
+\def\tightlist{\itemsep1pt\parskip0pt\parsep0pt}
+%\date{$date$}
+$date$
+%\setatomsep{1cm}
+%\usepackage{luatexja-ruby}
+% https://qiita.com/Selene-Misso/items/6c27a4a0947f10af3119o
+%\subtitle{\vspace{10truept}{\large $subtitle$}}
+%==========================================
+% ドキュメント開始
+%==========================================
+
+\begin{document}
+
+$maketitle$
+
+\begin{abstract}$abstract$\end{abstract}
+	
+$titletableofcontents$
+
+$titlepagenumber$
+
+$titlenewpage$
+
+$titlenewpage$
+
+%\input{automatic_generated}
+$body$
+%\printbibliography
+%Testbibliography \cite{波多野恭弘2016}
+\printbibliography[title=参考文献]
+
+\end{document}
