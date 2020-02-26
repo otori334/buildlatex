@@ -9,4 +9,4 @@ $dvipdf           = 'dvipdfmx -I 3 %O -o %D %S';
 $makeindex        = 'mendex %O -o %D %S';
 $max_repeat       = 5;
 $pvc_view_file_via_temporary = 0;
-#$pdf_previewer = "open -ga /Applications/Skim.app"; 
+$pdf_previewer = "open -ga /Applications/Skim.app"; 

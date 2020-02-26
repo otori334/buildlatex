@@ -1,5 +1,4 @@
 \documentclass[uplatex,dvipdfmx,a4paper,10pt]{jsarticle}
-
 \usepackage{geometry}
 %\geometry{left=3cm, right=2cm, top=2cm, bottom=3cm}
 
@@ -14,26 +13,13 @@ $draft$% dvipdfmx は自動的に有効になる
 \usepackage{float}
 \usepackage[version=3]{mhchem}
 \usepackage{chemfig}
+\usepackage{enumerate}
 \usepackage{bigfoot}
 \usepackage{longtable} % 表組みに必要
 \usepackage{booktabs} % 表組みに必要
 \usepackage{subfig} % 図の横並び表示に必要
 \usepackage{siunitx} % SI単位（国際単位系）を出力
 \usepackage{here} 
-\usepackage{pdfpages}
-
-%http://konoyonohana.blog.fc2.com/blog-entry-58.html 
-%エラー対応　“Too deeply nested.”　5階以上のネスト
-\usepackage{enumerate}
-\usepackage{enumitem}
-\setlistdepth{20}
-\renewlist{itemize}{itemize}{20}
-\setlist[itemize]{label=\textbullet}
-
-
-
-%https://ameblo.jp/h-krkr/entry-10908206471.html
-\usepackage{mikibase}
 
 \usepackage[%
 	hidelinks,%
@@ -51,16 +37,6 @@ $draft$% dvipdfmx は自動的に有効になる
 \usepackage{pxjahyper}
 \usepackage{url}
 \urlstyle{sf}
-
-
-\usepackage[dvipdfmx]{pdfcomment}
-\AtBeginDocument{\special{pdf:tounicode UTF8-UTF16}}
-\usepackage{xcolor}
-%\usepackage[x11names]{xcolor}
-%\hypersetup{unicode}
-\definecolor{myblue}{RGB}{187,254,237}
-
-%\pdfmargincomment[icon=Note,color=myblue]{}
 
 
 \usepackage{comment}
@@ -99,8 +75,7 @@ $draft$% dvipdfmx は自動的に有効になる
 		{\(\mathrm{d}\)}%
 	}%
 
-\usepackage{mathrsfs}%花文字
-%筆記体はmathcal
+\usepackage{mathrsfs}
 
 
 %https://orumin.blogspot.com/2017/09/biblatex.html
@@ -177,10 +152,6 @@ $draft$% dvipdfmx は自動的に有効になる
 \newcommand{\vect}[1]{\mbox{\boldmath \(#1\)}}
 \newcommand*{\uni}[2][]{
 	\ifthenelse{\boolean{mmode}}{#1\,\si{#2}}{\(#1\,\si{#2}\)}}
-\newcommand*{\pomment}[2][icon=Note,color=myblue]{
-	\pdfmargincomment[#1]
-	{#2}
-	}
 	
 $abstractname$
 	
@@ -209,26 +180,23 @@ $date$
 %\usepackage{luatexja-ruby}
 % https://qiita.com/Selene-Misso/items/6c27a4a0947f10af3119o
 %\subtitle{\vspace{10truept}{\large $subtitle$}}
-%==========================================
-% ドキュメント開始
-%==========================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 
-$maketitle$
+\maketitle
 
 \begin{abstract}$abstract$\end{abstract}
 	
-$titletableofcontents$
+$tableofcontents$
 
-$titlepagenumber$
-
-$titlenewpage$
+\thispagestyle{empty}
 
 $titlenewpage$
 
 %\input{automatic_generated}
 $body$
+
 %\printbibliography
 %Testbibliography \cite{波多野恭弘2016}
 \printbibliography[title=参考文献]

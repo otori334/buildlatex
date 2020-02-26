@@ -1,0 +1,378 @@
+\documentclass[uplatex,dvipdfmx,a4paper,10pt]{jsarticle}
+\usepackage{geometry}
+%\geometry{left=3cm, right=2cm, top=2cm, bottom=3cm}
+
+%\usepackage[draft]{graphicx, color}
+%https://qiita.com/zr_tex8r/items/442b75b452b11bee8049
+%\usepackage\usepackage{graphicx}
+
+% dvipdfmx は自動的に有効になる{graphicx}% dvipdfmx は自動的に有効になる
+\usepackage{graphicx}
+
+% dvipdfmx は自動的に有効になる% dvipdfmx は自動的に有効になる
+\usepackage[dvipdfmx]{color}% dvipdfmx は自動的に有効になるらしい
+
+\usepackage{multicol}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage[version=3]{mhchem}
+\usepackage{chemfig}
+\usepackage{enumerate}
+\usepackage{bigfoot}
+\usepackage{longtable} % 表組みに必要
+\usepackage{booktabs} % 表組みに必要
+\usepackage{subfig} % 図の横並び表示に必要
+\usepackage{siunitx} % SI単位（国際単位系）を出力
+\usepackage{here} 
+
+\usepackage[%
+	hidelinks,%
+	pdfusetitle,%
+	colorlinks=false,%
+	bookmarks=true, % 以下ブックマークに関する設定
+	bookmarksnumbered=true,%
+	pdfborder={0 0 0},%
+	bookmarkstype=toc,%
+	pdftitle={「反応速度論」レポート課題 No.~1},%
+	pdfauthor={otori334}%
+]{hyperref}
+\title{ 「反応速度論」レポート課題 No.~1}
+\author{33417334 otori 334}
+\usepackage{pxjahyper}
+\usepackage{url}
+\urlstyle{sf}
+
+
+\usepackage{comment}
+
+%\usepackage[backend=bibtex]{biblatex}
+%\usepackage[backend=bibtex,style=numeric]{biblatex}
+%\usepackage[backend=bibtex,style=ieee]{biblatex}
+\usepackage[backend=biber,style=ieee]{biblatex}
+%\bibliography{sample.bib}
+\DeclarePrefChars{'-} % https://oku.edu.mie-u.ac.jp/tex/mod/forum/discuss.php?d=2313
+\addbibresource{references.bib}
+
+
+
+\newcommand*{\ppa}{%
+	\ifthenelse{\boolean{mmode}}%
+		{\mathrm{p}K_\mathrm{a}}%
+		{\(\mathrm{p}K_\mathrm{a}\)}%
+	}%
+
+\newcommand*{\ppb}{%
+	\ifthenelse{\boolean{mmode}}%
+		{\mathrm{p}K_\mathrm{b}}%
+		{\(\mathrm{p}K_\mathrm{b}\)}%
+	}%
+
+\newcommand*{\pph}{%
+	\ifthenelse{\boolean{mmode}}%
+		{\mathrm{pH}}%
+		{\(\mathrm{pH}\)}%
+	}%
+
+\newcommand*{\diff}{%
+	\ifthenelse{\boolean{mmode}}%
+		{\mathrm{d}}%
+		{\(\mathrm{d}\)}%
+	}%
+
+\usepackage{mathrsfs}
+
+
+%https://orumin.blogspot.com/2017/09/biblatex.html
+\AtEveryBibitem{%
+\ifentrytype{article}{%
+}{}
+\ifentrytype{inproceedings}{%
+\clearfield{volume}
+\clearfield{number}
+}{}
+\clearlist{publisher}
+\clearfield{isbn}
+\clearlist{location}
+\clearfield{doi}
+\clearfield{url}
+}
+
+\renewbibmacro{in:}{%
+\ifentrytype{inproceedings}{%
+  \setunit{}
+  \addperiod\addspace In \textit{Proc.\ of the}}%
+{\printtext{\bibstring{in}\intitlepunct}}
+}
+
+\renewbibmacro*{series+number:emphcond}{%
+\ifentrytype{inproceedings}{%
+  \printtext{(}\printfield{series}\printtext{)}\setunit*{\addcomma\space}\newunit}%
+{%
+  \printfield{number}%
+  \setunit*{\addspace\bibstring{inseries}\addspace}%
+  \ifboolexpr{%
+    not test {\iffieldundef{volume}}
+  }%
+   {\printfield{series}}%
+   {\ifboolexpr{%
+       test {\iffieldundef{volume}}
+       and
+       test {\iffieldundef{part}}
+       and
+       test {\iffieldundef{number}}
+       and
+       test {\ifentrytype{book}}
+     }%
+      {\newunit\newblock}%
+      {}%
+    \printfield[noformat]{series}}%
+  \newunit}
+}
+
+
+
+
+\usepackage[jis2004]{otf}
+
+
+% prevent hyphenation
+\hyphenpenalty=10000\relax
+\exhyphenpenalty=10000\relax
+\sloppy
+
+
+%行間調整
+%\renewcommand\baselinestretch{0.8} 
+
+\usepackage{setspace} %% for spacing
+%\begin{spacing}{0.7}
+%hogehogehogehoge
+%\end{spacing}
+
+%脚注番号を （1）に変更
+%\renewcommand\thefootnote{（\arabic{footnote}）}
+%脚注番号を 1）に変更
+\renewcommand\thefootnote{\arabic{footnote}）}
+\newcommand{\vect}[1]{\mbox{\boldmath \(#1\)}}
+\newcommand*{\uni}[2][]{
+	\ifthenelse{\boolean{mmode}}{#1\,\si{#2}}{\(#1\,\si{#2}\)}}
+	
+\renewcommand{\abstractname}{}
+	
+	
+%\newcommand*{\myfig}[4][width=10cm]{\begin{figure}[htb][H]\centering %\includegraphics[width=1.0\columnwidth][#1]{#2} \caption{#3} \label{fig:#4} \end{figure}}
+
+
+% http://nos.hateblo.jp/entry/20081015/1224084491
+%\newcommand{\fig}[3][width=15cm]{
+%\begin{figure}[htb][ht]
+%\begin{center}
+% \includegraphics[width=1.0\columnwidth][#1]{figs/#2}
+%\end{center}
+%\caption{#3}
+%\label{fig:#2}
+%\end{figure}}
+
+%\newcommand{\fref}[1]{図\ref{fig:#1}}
+
+%\renewcommand{\abstractname}{概要}
+
+\def\tightlist{\itemsep1pt\parskip0pt\parsep0pt}
+%\date{\date{提出日：\today}}
+\date{提出日：\today}
+%\setatomsep{1cm}
+%\usepackage{luatexja-ruby}
+% https://qiita.com/Selene-Misso/items/6c27a4a0947f10af3119o
+%\subtitle{\vspace{10truept}{\large }}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}\end{abstract}
+	
+
+
+\thispagestyle{empty}
+
+
+
+%\input{automatic_generated}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  完全気体を仮定して，\SI{300}{\kelvin}における単原子分子の平均の並進運動エネルギー\(\bigl(\frac{1}{2}mc^2\bigr)\)を求めよ．ただし，\(m\)は気体分子1個の質量，\(c^2\)は平均2乗速さである．
+
+  並進運動エネルギーは\(\frac{3}{2}kT\)で表せるから \input{eq:01}
+\item
+  速さに関するMaxwell分布関数\(f(v)\)を用いて，以下の問に答えよ．
+
+  Maxwell分布関数は \input{eq:02}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    \(f(v)\)を用いて，根平均2乗速さ\(c\)，平均の速さ\(\overline{c}\)，最確の速さ\(c^{\ast}\)を与える式を導け．
+  \end{enumerate}
+
+  最確の速さ\(c^{\ast}\)はMaxwell分布関数の極大値で示されるから条件は
+  \input{eq:03}
+
+  計算すると \input{eq:04}
+
+  条件より \input{eq:05}
+
+  平均の速さ\(\overline{c}\)は \input{eq:06}
+
+  平均2乗速さ\(c^2\)は
+
+  \input{eq:07}
+
+  よって根平均2乗速さ\(c\)は \input{eq:08}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \setcounter{enumii}{1}
+  \tightlist
+  \item
+    \SI{298}{\kelvin}における\ce{He}分子(モル質量\SI{4.0}{g.mol^{-1}})の根平均2乗速さ\(c\)，平均の速さ\(\overline{c}\)，最確の速さ\(c^{\ast}\)を求めよ．
+  \end{enumerate}
+
+  \input{eq:09}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \setcounter{enumii}{2}
+  \tightlist
+  \item
+    \SI{298}{\kelvin}における\ce{He}分子が根平均2乗速さ\(c\)から\(\pm\SI{4.0}{m.s^{-1}}\)の範囲にある確率はいくらか．その速度範囲で\(f(v)\)が一定であると近似して求めよ．
+  \end{enumerate}
+
+  \input{eq:10}
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\item
+  \(1\,\mathrm{atm}\)，\SI{298}{\kelvin}において，１個の\ce{N2}分子(分子直径\SI{0.37}{nm}，モル質量\SI{28}{g.mol^{-1}})の衝突頻度\(z\)および衝突密度\(Z_\mathrm{AA}\)はいくらか．また，平均自由行程\(\lambda\)の値も計算せよ．ただし，\(\SI{1}{atm} = 1.01 \times 10^5 \,\si{\pascal}= 1.01 \times 10^5 \si{J.m^{-3}}\)
+  である．
+
+  衝突頻度\(z\)は
+
+  \input{eq:11}
+
+  衝突密度\(Z_\mathrm{AA}\)は
+
+  \input{eq:12}
+
+  平均自由行程\(\lambda\)は
+
+  \input{eq:13}
+\item
+  \SI{300}{\kelvin}において，\ce{N2}分子の平均自由行程が分子直径の10倍になるときの圧力(単位:\(\mathrm{atm}\))を求めよ．
+
+  条件
+
+  \input{eq:14}
+
+  \(P\)は
+
+  \input{eq:15}
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{4}
+\item
+  \SI{300}{\kelvin}において，\SI{1.0}{atm}の空気中で\ce{O2}分子(分子直径\SI{0.357}{nm}，モル質量\SI{32}{g.mol^{-1}})と\ce{N2}分子(分子直径\SI{0.37}{nm}，モル質量\SI{28}{g.mol^{-1}})の衝突密度を計算せよ．
+
+  \input{eq:16} %途中
+\item
+  気体分子と壁との衝突に関する以下の問に答えよ．
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \item
+    Maxwell-Boltzmann分布関数\(f(v_\mathrm{x})\)を用いて，1個の質量が\(m_\mathrm{a}\)の気体分子と面積\(A\)の壁との単位時間あたりの衝突数を表す式を導け．
+
+    求める衝突数\(z\)は \input{eq:17}
+  \item
+    秤量した資料を半径\(r\)の円形小孔のある容器内で温度\(T(\si{\kelvin})\)に加熱したとき，時間\(\Delta t\)の間の重量減少は\(\Delta m\)であった．試料の蒸気圧\(p\)を求める式を導け．
+  \end{enumerate}
+
+  \input{eq:18} より \input{eq:19}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \setcounter{enumii}{2}
+  \tightlist
+  \item
+    \SI{1000}{\degreeCelsius}において半径\SI{0.50}{mm}の小孔からの\ce{Ge}(モル質量\SI{72.6}{g.mol^{-1}})の重量損失が2時間で\uni[4.3 \times 10^{-2}]{mg}であった．\uni[1000]{\degreeCelsius}での\ce{Ge}の蒸気圧を求めよ．
+  \end{enumerate}
+
+  \input{eq:20}
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \setcounter{enumii}{3}
+  \tightlist
+  \item
+    1個の質量が\(m_\mathrm{a}\)の気体分子が小孔から流出する場合，初圧\(p_0\)の容器内の圧力変化を時間の関数として表せ．
+  \end{enumerate}
+
+  \input{eq:21} %途中
+
+  ここで
+
+  \input{eq:210} %途中
+
+  よって
+
+  \input{eq:211} %途中
+
+  \input{eq:212} %途中
+
+  ただし\(t = 0\)のとき\(P = P_0\)，\(\exp{C} = P_0\)
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \setcounter{enumii}{4}
+  \tightlist
+  \item
+    内容積\uni[3.0]{m^3}の宇宙船に隕石が衝突して半径\uni[0.1]{mm}の穴が開いた．宇宙船の中の最初の酸素圧力が\uni[0.8]{atm}で，温度が\uni[298]{K}であったとすると，酸素圧力が\uni[0.7]{atm}まで下がるのにどれだけの時間がかかるか．
+  \end{enumerate}
+
+  %\input{eq:22}
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{6}
+\tightlist
+\item
+  \ce{Ar}と\ce{Ne}の混合気体(圧力比で1:6)が小孔を通って流出するとき，最初にでてくる気体の混合比(圧力比)はいくらか，求めよ．
+\end{enumerate}
+
+\input{eq:23}
+\input{eq:24}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{7}
+\item
+  \SI{25}{\degreeCelsius}におけるアルゴン(分子量:39.95，衝突断面積:\SI{0.36}{nm^{2}})について，\SI{1.00}{atm}での拡散係数を計算せよ．また，ある管の中に\SI{0.10}{atm.cm^{-1}}の圧力勾配ができているとき，拡散によるアルゴンの流束はいくらか求めよ．ただし，アルゴンは完全気体として取り扱うものとする．
+  \\
+
+  拡散係数\(D\)は\input{eq:25}%途中
+
+  流束\(J\)は\input{eq:26}
+\end{enumerate}
+
+%\printbibliography
+%Testbibliography \cite{波多野恭弘2016}
+\printbibliography[title=参考文献]
+
+\end{document}
