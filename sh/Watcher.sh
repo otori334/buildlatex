@@ -155,22 +155,19 @@ initial_hash () {
 
 # ファイルの変更を検知する関数 
 array_diff_a () { 
-  # pre_target=${target}; 
   rec_state; mode="hash"; rec_state 
-    # part=( $(echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
-    # eval $(quaternion)[index]="$file" 
-    # eval echo ${#$(quaternion)[@]} # 失敗
-    # echo
-    # quaternion # echo "eq_hash_A" 
-    echo ${#eq_hash_A[@]} # 成功
     quaternion
     # echo ${#$(quaternion)[@]} # 失敗
+    echo ${#eq_hash_B[@]} # 成功
+    echo ${#eq_hash_A[@]} # 成功
+    eval echo '${#'$(quaternion ${target} ${mode} $(xor_buffer))'[@]}' # 成功
     eval echo '${#'$(quaternion)'[@]}' # 成功
+    previous_index=$(eval echo '${#'$(quaternion ${target} ${mode} $(xor_buffer))'[@]}')
+    current_index=$(eval echo '${#'$(quaternion)'[@]}')
     
-    roster @
-    echo "終了" 
-    
-    exit
+    # roster @
+    # cd ${PROJECT_DIR}/src/eq ; rm empty1.out
+    echo "終了"; exit
     
   rec_state; mode="index"; rec_state 
     # ファイル数が変わらない場合
@@ -244,11 +241,11 @@ processing () {
 
 # cd ${PROJECT_DIR}/src/eq
 # touch empty1.out
-# cd ${PROJECT_DIR}/src/eq
+cd ${PROJECT_DIR}/src/eq
 # rm empty1.out
-# touch empty1.out
-
+touch empty1.out
 initial_hash 
+
 rec_state # 監視開始 
   while true; do 
     while true; do 
@@ -258,12 +255,12 @@ rec_state # 監視開始
             # sleep $interval 
             for target in ${TARGET_DIR}; do 
               rec_state # target 
+
+                cd ${PROJECT_DIR}/src/eq
+                rm empty1.out
+                
                 update                 
                 array_diff_a 
-
-                # cd ${PROJECT_DIR}/src/eq
-                # rm empty1.out
-                
                 exit
               rest_state # target 
             done
