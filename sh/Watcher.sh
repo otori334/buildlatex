@@ -133,13 +133,11 @@ update () {
       # echo "${array_state[@]}[${index}] = $(roster ${index})" # デバッグ用 
       index=$(( index + 1 )) 
     done 
-    # 最大のindex，つまりハッシュ値生成に用いたファイルの個数を記録する連想配列 
-    # 本来変数targetが入る第一項は，targetの初期値であるTARで塗り潰した 
-    # 配列として参照しやすい第四項にtargetを格納し，三次元連想配列風の使い方をしている 
-    pre_target=${target}; 
-    rec_state; target="TAR" mode="index"; rec_state 
-      eval $(quaternion)[target]=${index} 
-      echo "${array_state[@]}[${pre_target}] = $(roster ${pre_target})" # デバッグ用 
+    # 最大のindex，つまりハッシュ値生成に用いたファイルの個数を記録する
+    # #!/bin/shは連想配列を使えない
+    rec_state; mode="index"; rec_state 
+      eval $(quaternion)=${index} 
+      echo "${array_state[@]}[0] = $(roster 0)" # デバッグ用 
     rest_state; rest_state # mode 
   rest_state; rest_state # mode 
 } 
@@ -150,11 +148,7 @@ initial_hash () {
     for target in ${TARGET_DIR}; do 
       rec_state # target 
         update 
-        roster TAR index B eq
-        roster TAR index B fig
-        roster TAR index B md
-        roster TAR index B tpl
-        roster TAR index B @
+        roster ${target} index B 0
       rest_state # target 
     done 
   rest_state; rest_state # buffer 
@@ -162,32 +156,18 @@ initial_hash () {
 
 # ファイル数の増減を調べる関数
 array_diff_a () { 
-  pre_target=${target}; 
-  # rec_state; target="TAR" mode="index"; rec_state 
-    # eval $(quaternion)[target]=${index} 
-    # echo "${array_state[@]}[${pre_target}] = $(roster ${pre_target}) $(quaternion)" # デバッグ用 
-    # rec_state; buffer=$(xor_buffer) ; rec_state 
-      # echo "${array_state[@]}[${pre_target}] = $(roster ${pre_target}) $(quaternion)" # デバッグ用 
-    # rest_state; rest_state # mode 
-  # rest_state; rest_state # mode 
-  if [ $(roster TAR index ${buffer} ${target}) -eq $(roster TAR index $(xor_buffer) ${target}) ] ; then 
-    echo "ああああああああ" 
-    roster TAR index ${buffer} ${target} 
-    roster TAR index $(xor_buffer) ${target}
-    quaternion 
-  else 
-    if [ $(roster TAR index ${buffer} ${target}) -gt $(roster TAR index $(xor_buffer) ${target}) ] ; then 
-      echo "いいいいいいいい" 
-      roster TAR index ${buffer} ${target}
-      roster TAR index $(xor_buffer) ${target}
-      quaternion
+  # pre_target=${target}; 
+  rec_state; mode="index"; rec_state 
+    if [ $(roster 0) -eq $(roster ${target} ${mode} $(xor_buffer) 0) ] ; then 
+      echo "ああああああああ" 
     else 
-      echo "うううううううう" 
-      roster TAR index ${buffer} ${target} 
-      roster TAR index $(xor_buffer) ${target}
-      quaternion 
+      if [ $(roster 0) -gt $(roster ${target} ${mode} $(xor_buffer) 0) ] ; then 
+        echo "いいいいいいいい" 
+      else 
+        echo "うううううううう" 
+      fi
     fi
-  fi
+  rest_state; rest_state # mode 
 }
 
 # ファイルの増減がない場合，ハッシュ値を比較してファイルの変更を検知する関数
@@ -221,21 +201,19 @@ processing () {
     echo $index
   done
   exit
+  # https://linuxcommand.net/read/#read-2
+  # whileと組み合わせてファイルから行を読み込む
 }
 
 # cd ${PROJECT_DIR}/src/eq
 # touch empty1.out
 
-initial_hash 
-
-
-# roster TAR index A ${target}
-roster TAR index B ${target}
 
 cd ${PROJECT_DIR}/src/eq
 # rm empty1.out
 touch empty1.out
 
+initial_hash 
 rec_state # 監視開始 
   while true; do 
     while true; do 
@@ -249,15 +227,11 @@ rec_state # 監視開始
                 # array_diff_b 
                 
                 # ファイル数増減を検知できるかテストした
-                # array_diff_a 
-                
-                roster TAR index A ${target}
-                roster TAR index B ${target}
-                
                 
                 cd ${PROJECT_DIR}/src/eq
                 rm empty1.out
                 
+                array_diff_a 
                 exit
               rest_state # target 
             done
