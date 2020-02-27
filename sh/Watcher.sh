@@ -156,6 +156,22 @@ initial_hash () {
 # ファイルの変更を検知する関数 
 array_diff_a () { 
   # pre_target=${target}; 
+  rec_state; mode="hash"; rec_state 
+    # part=( $(echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
+    # eval $(quaternion)[index]="$file" 
+    # eval echo ${#$(quaternion)[@]} # 失敗
+    # echo
+    # quaternion # echo "eq_hash_A" 
+    echo ${#eq_hash_A[@]} # 成功
+    quaternion
+    # echo ${#$(quaternion)[@]} # 失敗
+    eval echo '${#'$(quaternion)'[@]}' # 成功
+    
+    roster @
+    echo "終了" 
+    
+    exit
+    
   rec_state; mode="index"; rec_state 
     # ファイル数が変わらない場合
     if [ $(roster 0) -eq $(roster ${target} ${mode} $(xor_buffer) 0) ] ; then 
