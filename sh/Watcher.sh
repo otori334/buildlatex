@@ -133,11 +133,11 @@ update () {
       # echo "${array_state[@]}[${index}] = $(roster ${index})" # デバッグ用 
       index=$(( index + 1 )) 
     done 
-    # 最大のindex，つまりハッシュ値生成に用いたファイルの個数を記録する
-    # #!/bin/shは連想配列を使えない
+    # 最大のindex，つまりハッシュ値生成に用いたファイルの個数を記録する 
+    # #!/bin/shは連想配列を使えない 
     rec_state; mode="index"; rec_state 
       eval $(quaternion)=${index} 
-      echo "${array_state[@]}[0] = $(roster 0)" # デバッグ用 
+      # echo "${array_state[@]}[0] = $(roster 0)" # デバッグ用 
     rest_state; rest_state # mode 
   rest_state; rest_state # mode 
 } 
@@ -148,29 +148,47 @@ initial_hash () {
     for target in ${TARGET_DIR}; do 
       rec_state # target 
         update 
-        roster ${target} index B 0
       rest_state # target 
     done 
   rest_state; rest_state # buffer 
 } 
 
-# ファイル数の増減を調べる関数
+# ファイルの変更を検知する関数 
 array_diff_a () { 
   # pre_target=${target}; 
   rec_state; mode="index"; rec_state 
+    # ファイル数が変わらない場合
     if [ $(roster 0) -eq $(roster ${target} ${mode} $(xor_buffer) 0) ] ; then 
-      echo "ああああああああ" 
+      echo "ファイル数が変わらない場合" 
+      # ファイルのハッシュ値を調べる
+      # array_diff_c 
     else 
+      # ファイル数が増えた場合
       if [ $(roster 0) -gt $(roster ${target} ${mode} $(xor_buffer) 0) ] ; then 
-        echo "いいいいいいいい" 
+        echo "ファイル数が増えた場合" 
+        # 増えたファイルを割り出す
+        array_diff_b ${buffer} 
+        # ファイルを記録
+        
+        # 増えたファイル以外のハッシュ値を調べる
+        array_diff_c
+        
+      # ファイル数が減った場合
       else 
-        echo "うううううううう" 
+        echo "ファイル数が減った場合" 
+        # 減ったファイルを割り出す
+        array_diff_b $(xor_buffer)
+        # ファイルを記録
+        
+        # 減ったファイル以外のハッシュ値を調べる
+        array_diff_c
+        
       fi
     fi
   rest_state; rest_state # mode 
 }
 
-# ファイルの増減がない場合，ハッシュ値を比較してファイルの変更を検知する関数
+# 配列を比較する関数
 array_diff_b () { 
   rec_state; mode="hash"; rec_state 
     PRE_IFS=${IFS} 
@@ -179,10 +197,13 @@ array_diff_b () {
     # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
     #両方の配列に含まれる項目を抜き出す 
     both=(`{ echo "$(roster @)"; echo "$(roster ${target} ${mode} $(xor_buffer) @)"; } | sort | uniq -d`) 
-    echo "${both[@]}" 
+    # echo "${both[@]}" 
     #array1から重複部分を取り除くとarray1には含まれるがarray2には含まれない項目を取り出せる 
-    only=(`{ echo "${both[@]}"; echo "$(roster ${target} ${mode} $(xor_buffer) @)"; } | sort | uniq -u`) 
-    echo "${only[@]}" 
+    # ファイル数が増えた場合
+    only=(`{ echo "${both[@]}"; echo "$(roster ${target} ${mode} $2 @)"; } | sort | uniq -u`) 
+    # ファイル数が減った場合
+    only=(`{ echo "${both[@]}"; echo "$(roster ${target} ${mode} $2 @)"; } | sort | uniq -u`) 
+    # echo "${only[@]}" 
     IFS=${PRE_IFS} 
   rest_state; rest_state # mode 
 }
@@ -207,11 +228,9 @@ processing () {
 
 # cd ${PROJECT_DIR}/src/eq
 # touch empty1.out
-
-
-cd ${PROJECT_DIR}/src/eq
+# cd ${PROJECT_DIR}/src/eq
 # rm empty1.out
-touch empty1.out
+# touch empty1.out
 
 initial_hash 
 rec_state # 監視開始 
@@ -220,18 +239,15 @@ rec_state # 監視開始
       while true; do 
         for buffer in "A" "B"; do 
           rec_state # buffer 
-            sleep $interval 
+            # sleep $interval 
             for target in ${TARGET_DIR}; do 
               rec_state # target 
-                update 
-                # array_diff_b 
-                
-                # ファイル数増減を検知できるかテストした
-                
-                cd ${PROJECT_DIR}/src/eq
-                rm empty1.out
-                
+                update                 
                 array_diff_a 
+
+                # cd ${PROJECT_DIR}/src/eq
+                # rm empty1.out
+                
                 exit
               rest_state # target 
             done
@@ -247,20 +263,6 @@ rec_state # 監視開始
 rest_state # 監視終了 
 exit
 
-
-                while true; do
-                  sleep $INTERVAL
-                  for f in *.md
-                    do
-                      b=`arraynum ${f}`
-                      current[${b}]=`update_hash ${f}`
-                      if [ "${current[${b}]}" != "${last[${b}]}" ] ; then
-                        c=`expr ${b} - 1`.md
-                        break 2
-                      fi
-                    done
-                done                    
-                  
                 for f in *.md
                   do
                     b=`arraynum ${f}`
