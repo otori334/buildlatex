@@ -133,12 +133,6 @@ update () {
       # echo "${array_state[@]}[${index}] = $(roster ${index})" # デバッグ用 
       index=$(( index + 1 )) 
     done 
-    # 最大のindex，つまりハッシュ値生成に用いたファイルの個数を記録する 
-    # #!/bin/shは連想配列を使えない 
-    rec_state; mode="index"; rec_state 
-      eval $(quaternion)=${index} 
-      # echo "${array_state[@]}[0] = $(roster 0)" # デバッグ用 
-    rest_state; rest_state # mode 
   rest_state; rest_state # mode 
 } 
 
@@ -156,41 +150,29 @@ initial_hash () {
 # ファイルの変更を検知する関数 
 array_diff_a () { 
   rec_state; mode="hash"; rec_state 
-    quaternion
-    # echo ${#$(quaternion)[@]} # 失敗
-    echo ${#eq_hash_B[@]} # 成功
-    echo ${#eq_hash_A[@]} # 成功
-    eval echo '${#'$(quaternion ${target} ${mode} $(xor_buffer))'[@]}' # 成功
-    eval echo '${#'$(quaternion)'[@]}' # 成功
     previous_index=$(eval echo '${#'$(quaternion ${target} ${mode} $(xor_buffer))'[@]}')
     current_index=$(eval echo '${#'$(quaternion)'[@]}')
+    echo "${array_state[@]} P${previous_index}\n${array_state[@]} C${current_index}" # デバッグ用 
     
-    # roster @
-    # cd ${PROJECT_DIR}/src/eq ; rm empty1.out
     echo "終了"; exit
     
-  rec_state; mode="index"; rec_state 
-    # ファイル数が変わらない場合
-    if [ $(roster 0) -eq $(roster ${target} ${mode} $(xor_buffer) 0) ] ; then 
+    if [ ${previous_index} -eq ${current_index} ] ; then 
       echo "ファイル数が変わらない場合" 
       # ファイルのハッシュ値を調べる
       # array_diff_c 
     else 
-      # ファイル数が増えた場合
-      if [ $(roster 0) -gt $(roster ${target} ${mode} $(xor_buffer) 0) ] ; then 
+      if [ ${previous_index} -lt ${current_index} ] ; then 
         echo "ファイル数が増えた場合" 
         # 増えたファイルを割り出す
-        array_diff_b ${buffer} 
-        # ファイルを記録
-        
+        # array_diff_b ${buffer} 
+        # cd ${PROJECT_DIR}/src/eq ; rm empty1.out
         # 増えたファイル以外のハッシュ値を調べる
         array_diff_c
         
-      # ファイル数が減った場合
       else 
         echo "ファイル数が減った場合" 
         # 減ったファイルを割り出す
-        array_diff_b $(xor_buffer)
+        # array_diff_b $(xor_buffer)
         # ファイルを記録
         
         # 減ったファイル以外のハッシュ値を調べる
@@ -203,22 +185,31 @@ array_diff_a () {
 
 # 配列を比較する関数
 array_diff_b () { 
-  rec_state; mode="hash"; rec_state 
-    PRE_IFS=${IFS} 
-    IFS=$'\n' 
-    
-    # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
-    #両方の配列に含まれる項目を抜き出す 
-    both=(`{ echo "$(roster @)"; echo "$(roster ${target} ${mode} $(xor_buffer) @)"; } | sort | uniq -d`) 
-    # echo "${both[@]}" 
-    #array1から重複部分を取り除くとarray1には含まれるがarray2には含まれない項目を取り出せる 
-    # ファイル数が増えた場合
-    only=(`{ echo "${both[@]}"; echo "$(roster ${target} ${mode} $2 @)"; } | sort | uniq -u`) 
-    # ファイル数が減った場合
-    only=(`{ echo "${both[@]}"; echo "$(roster ${target} ${mode} $2 @)"; } | sort | uniq -u`) 
-    # echo "${only[@]}" 
-    IFS=${PRE_IFS} 
-  rest_state; rest_state # mode 
+  PRE_IFS=${IFS} 
+  IFS=$'\n' 
+  # 配列を比較
+    # 引数は比べる二つの配列
+    # 引数の順番に意味を持たせる
+  # 配列を記録
+    # 異なる要素を割り出し，要素のインデックスを記録する 
+      # ファイル数が増減する前後でインデックスがズレた場合，どっちのバッファーを参照すればいいかわからなくなる
+      # 要素のインデックスではなく名前を記録する
+    # 増減したファイル・変更されたファイルに対応する処理を分ける予定はないが，一応分けて記録する
+      # 二つの記録の重複はビルドスクリプト側で処理する
+    # modeによって記録する配列を変える
+  
+  
+  # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
+  #両方の配列に含まれる項目を抜き出す 
+  both=(`{ echo "$(roster @)"; echo "$(roster ${target} ${mode} $(xor_buffer) @)"; } | sort | uniq -d`) 
+  # echo "${both[@]}" 
+  #array1から重複部分を取り除くとarray1には含まれるがarray2には含まれない項目を取り出せる 
+  # ファイル数が増えた場合
+  only=(`{ echo "${both[@]}"; echo "$(roster ${target} ${mode} $2 @)"; } | sort | uniq -u`) 
+  # ファイル数が減った場合
+  only=(`{ echo "${both[@]}"; echo "$(roster ${target} ${mode} $2 @)"; } | sort | uniq -u`) 
+  # echo "${only[@]}" 
+  IFS=${PRE_IFS} 
 }
 # array_diff_b
 # exit
