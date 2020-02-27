@@ -150,6 +150,11 @@ initial_hash () {
     for target in ${TARGET_DIR}; do 
       rec_state # target 
         update 
+        roster TAR index B eq
+        roster TAR index B fig
+        roster TAR index B md
+        roster TAR index B tpl
+        roster TAR index B @
       rest_state # target 
     done 
   rest_state; rest_state # buffer 
@@ -224,7 +229,7 @@ processing () {
 initial_hash 
 
 
-roster TAR index A ${target}
+# roster TAR index A ${target}
 roster TAR index B ${target}
 
 cd ${PROJECT_DIR}/src/eq
