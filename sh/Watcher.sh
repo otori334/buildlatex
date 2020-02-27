@@ -29,6 +29,10 @@ buffer="BUF"
 # 状態変数を記録する配列 
 array_state=() 
 
+# 状態変数を定義する関数
+
+# 状態変数の影響力を比べる関数
+
 # この関数が呼ばれたとき，二値の状態変数bufferが参照してないもう片方を返す関数 
 xor_buffer () { 
   # -eqは文字の比較条件式に使えない 
@@ -118,7 +122,7 @@ update_hash () {
   echo `openssl sha256 -r $1 | awk '{print $1}'` 
 } 
 
-# ハッシュ値一覧をrosterの擬4次元配列に格納・更新する関数 
+# ハッシュ値一覧を4次元配列に格納・更新する関数 
 update () { 
   rec_state; mode="hash"; rec_state 
     # ファイル名一覧を格納・更新 
@@ -147,8 +151,20 @@ initial_hash () {
   rest_state; rest_state # buffer 
 } 
 
-# ファイルの変更を検知する関数 
 array_diff_a () { 
+  rec_state; mode="hash"; rec_state 
+    
+    if [ "$(roster @)" != "$(roster ${target} ${mode} $(xor_buffer) @)" ] ; then 
+      echo "ハッシュが変わった場合" 
+      array_diff_b
+    else 
+      echo "ハッシュが変わらない場合" 
+    fi
+  rest_state; rest_state # mode 
+}
+
+# ファイルの変更を検知する関数 
+array_diff_b () { 
   rec_state; mode="hash"; rec_state 
     previous_index=$(eval echo '${#'$(quaternion ${target} ${mode} $(xor_buffer))'[@]}')
     current_index=$(eval echo '${#'$(quaternion)'[@]}')
@@ -184,7 +200,7 @@ array_diff_a () {
 }
 
 # 配列を比較する関数
-array_diff_b () { 
+array_diff_c () { 
   PRE_IFS=${IFS} 
   IFS=$'\n' 
   # 配列を比較
@@ -193,7 +209,12 @@ array_diff_b () {
   # 配列を記録
     # 異なる要素を割り出し，要素のインデックスを記録する 
       # ファイル数が増減する前後でインデックスがズレた場合，どっちのバッファーを参照すればいいかわからなくなる
-      # 要素のインデックスではなく名前を記録する
+        # 要素のインデックスではなく名前を記録する
+          # せっかく場合分けするんだからインデックスで記録する
+          # ファイル増えたらcurrent_index参照，ファイル減ったらprevious_index参照
+          # 更新する前にビルドスクリプトを呼ぶから情報は保持される
+          # ファイル数が変わらない状態，増えた数と減った数が等しい場合がある
+          # リネームとか
     # 増減したファイル・変更されたファイルに対応する処理を分ける予定はないが，一応分けて記録する
       # 二つの記録の重複はビルドスクリプト側で処理する
     # modeによって記録する配列を変える
@@ -215,9 +236,6 @@ array_diff_b () {
 # exit
 
 
-array_diff_c () { 
-  :
-}
 
 processing () {  
   index=0
@@ -233,9 +251,9 @@ processing () {
 # cd ${PROJECT_DIR}/src/eq
 # touch empty1.out
 cd ${PROJECT_DIR}/src/eq
-# rm empty1.out
 touch empty1.out
 initial_hash 
+# rm empty1.out
 
 rec_state # 監視開始 
   while true; do 
@@ -251,8 +269,9 @@ rec_state # 監視開始
                 rm empty1.out
                 
                 update                 
-                array_diff_a 
+                array_diff_a
                 exit
+                # array_diff_b 
               rest_state # target 
             done
             # roster @ 
