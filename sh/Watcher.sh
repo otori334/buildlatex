@@ -135,7 +135,7 @@ update () {
     done 
     # 最大のindex，つまりハッシュ値生成に用いたファイルの個数を記録する連想配列 
     # 本来変数targetが入る第一項は，targetの初期値であるTARで塗り潰した 
-    # 配列として参照しやすい第四項にtargetを格納し，三次元連想配列風な使い方をしている 
+    # 配列として参照しやすい第四項にtargetを格納し，三次元連想配列風の使い方をしている 
     pre_target=${target}; 
     rec_state; target="TAR" mode="index"; rec_state 
       eval $(quaternion)[target]=${index} 
@@ -155,21 +155,37 @@ initial_hash () {
   rest_state; rest_state # buffer 
 } 
 
+# ファイル数の増減を調べる関数
 array_diff_a () { 
-  # if [ "buffer=0; echo $(roster @)" -eq "buffer=1; echo $(roster @)" ] ; then 
-    # :
-  # fi
-  # if [ $(roster TAR index B @) = $(roster TAR index A @) ] ; then 
-  if [ "$(roster @)" = "$(roster ${target} ${mode} $(xor_buffer) @)" ] ; then 
+  pre_target=${target}; 
+  # rec_state; target="TAR" mode="index"; rec_state 
+    # eval $(quaternion)[target]=${index} 
+    # echo "${array_state[@]}[${pre_target}] = $(roster ${pre_target}) $(quaternion)" # デバッグ用 
+    # rec_state; buffer=$(xor_buffer) ; rec_state 
+      # echo "${array_state[@]}[${pre_target}] = $(roster ${pre_target}) $(quaternion)" # デバッグ用 
+    # rest_state; rest_state # mode 
+  # rest_state; rest_state # mode 
+  if [ $(roster TAR index ${buffer} ${target}) -eq $(roster TAR index $(xor_buffer) ${target}) ] ; then 
     echo "ああああああああ" 
+    roster TAR index ${buffer} ${target} 
+    roster TAR index $(xor_buffer) ${target}
+    quaternion 
   else 
-    echo "いいいいいいいい" 
-    
+    if [ $(roster TAR index ${buffer} ${target}) -gt $(roster TAR index $(xor_buffer) ${target}) ] ; then 
+      echo "いいいいいいいい" 
+      roster TAR index ${buffer} ${target}
+      roster TAR index $(xor_buffer) ${target}
+      quaternion
+    else 
+      echo "うううううううう" 
+      roster TAR index ${buffer} ${target} 
+      roster TAR index $(xor_buffer) ${target}
+      quaternion 
+    fi
   fi
-  
-
 }
 
+# ファイルの増減がない場合，ハッシュ値を比較してファイルの変更を検知する関数
 array_diff_b () { 
   rec_state; mode="hash"; rec_state 
     PRE_IFS=${IFS} 
@@ -182,7 +198,6 @@ array_diff_b () {
     #array1から重複部分を取り除くとarray1には含まれるがarray2には含まれない項目を取り出せる 
     only=(`{ echo "${both[@]}"; echo "$(roster ${target} ${mode} $(xor_buffer) @)"; } | sort | uniq -u`) 
     echo "${only[@]}" 
-    # 寝て起きたら増えたときと減ったときと変わらない時で場合わけしたい
     IFS=${PRE_IFS} 
   rest_state; rest_state # mode 
 }
@@ -203,10 +218,17 @@ processing () {
   exit
 }
 
+# cd ${PROJECT_DIR}/src/eq
+# touch empty1.out
+
 initial_hash 
 
-cd ${PROJECT_DIR}/src/eq
 
+roster TAR index A ${target}
+roster TAR index B ${target}
+
+cd ${PROJECT_DIR}/src/eq
+# rm empty1.out
 touch empty1.out
 
 rec_state # 監視開始 
@@ -215,14 +237,19 @@ rec_state # 監視開始
       while true; do 
         for buffer in "A" "B"; do 
           rec_state # buffer 
-            # sleep $interval 
+            sleep $interval 
             for target in ${TARGET_DIR}; do 
               rec_state # target 
                 update 
-                array_diff_b 
+                # array_diff_b 
                 
                 # ファイル数増減を検知できるかテストした
-                array_diff_a 
+                # array_diff_a 
+                
+                roster TAR index A ${target}
+                roster TAR index B ${target}
+                
+                
                 cd ${PROJECT_DIR}/src/eq
                 rm empty1.out
                 
