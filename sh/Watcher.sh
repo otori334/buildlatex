@@ -46,8 +46,22 @@ xor_buffer () {
 # グローバル変数である状態変数にスコープを与える関数 
 rec_state () { 
   # 各状態変数をarray_stateに記録する 
+  # quaternionは全（予定）状態変数を直接読んでる
   array_state+=( $(quaternion) ) 
   echo "${array_state[@]}" # デバッグ用 
+} 
+
+# rec_stateをさかのぼって状態変数を参照する関数 
+# reminiscence_state，remember_state
+rem_state () { 
+  if [ $# -eq 0 ]; then 
+    # quaternionは全（予定）状態変数を直接読んでる
+    quaternion
+  else 
+    # こっちは記録された状態変数配列の末尾を読んでるだけ
+    echo "${array_state[$(( ${#array_state[@]} - $1 - 1 ))]}" 
+  fi 
+
 } 
 
 # グローバル変数である状態変数にスコープを与える関数，rec_stateと合わせて使う 
@@ -58,7 +72,7 @@ rest_state () {
   IFS=${ORI_IFS} 
   # Thanks to https://www.marketechlabo.com/bash-batch-best-practice/ 
   # アンダーバー区切りの末尾要素から要素を抽出 
-  part=( $(echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
+  part=( $( rem_state 0 | tr -s '_' ' ') ) 
   IFS=${PRE_IFS} 
   # Thanks to https://qiita.com/b4b4r07/items/e56a8e3471fb45df2f59 
   # 配列の末尾要素を読んで状態変数を復元（破壊的操作）
@@ -75,6 +89,7 @@ quaternion () {
     # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
     # 引数が無い場合は状態変数に対応した配列名を生成 
     var_name="${target}_${mode}_${buffer}" 
+    # reminiscence
   else 
     # 引数で指定された配列名を生成 
     var_name="${1}_${2}_${3}" 
@@ -83,15 +98,24 @@ quaternion () {
   eval echo '$'$str 
 } 
 
+# 引数で指定された配列名を生成する関数
+spec_state () {
+  
+}
+
+
+
+
+
 # 擬4次元配列を格納する関数 
 roster() { 
   if [ $# -eq 1 ]; then 
     # Thanks to https://aki-yam.hatenablog.com/entry/20081105/1225865004 
     # Thanks to https://orebibou.com/2015/01/シェルスクリプトでevalコマンドを用いた変数の2重/ 
-    # 引数が一つの場合 
-    eval echo '${'$(quaternion)'['$1']}' 
+    # Thanks to https://qiita.com/mtomoaki_96kg/items/ff82305f1ff4bb4c827c 
+    eval echo '"${'$(quaternion)'['$1']}"' 
   else 
-    eval echo '${'$(quaternion $1 $2 $3)'['$4']}' 
+    eval echo '"${'$(quaternion $1 $2 $3)'['$4']}"' 
   fi 
 } 
 
@@ -106,7 +130,7 @@ files_in () {
     # Thanks to https://www.marketechlabo.com/bash-batch-best-practice/ 
     # sed 's!^.*/!!'何かわからないけど多分パスの後ろの/を削ってる・無いと動かない 
     for file in `find ${PROJECT_DIR}/src/${target} -type f -maxdepth 2 ! -name .DS_Store | sed 's!^.*/!!' | sort -n`; do 
-      eval $(quaternion)[index]="$file" 
+      eval $(quaternion)[index]="${file}" 
       # echo "$(quaternion)[${index}] = ${file}" # デバッグ用 
       # echo "${array_state[@]}[${index}] = ${file}" # デバッグ用 
       # Thanks to http://unix.oskp.net/shellscript/while_until.html 
@@ -156,6 +180,7 @@ array_diff_a () {
     
     if [ "$(roster @)" != "$(roster ${target} ${mode} $(xor_buffer) @)" ] ; then 
       echo "ハッシュが変わった場合" 
+      # array_diff_b
       array_diff_b
     else 
       echo "ハッシュが変わらない場合" 
@@ -170,6 +195,7 @@ array_diff_b () {
     current_index=$(eval echo '${#'$(quaternion)'[@]}')
     echo "${array_state[@]} P${previous_index}\n${array_state[@]} C${current_index}" # デバッグ用 
     
+    array_diff_d
     echo "終了"; exit
     
     if [ ${previous_index} -eq ${current_index} ] ; then 
@@ -203,23 +229,6 @@ array_diff_b () {
 array_diff_c () { 
   PRE_IFS=${IFS} 
   IFS=$'\n' 
-  # 配列を比較
-    # 引数は比べる二つの配列
-    # 引数の順番に意味を持たせる
-  # 配列を記録
-    # 異なる要素を割り出し，要素のインデックスを記録する 
-      # ファイル数が増減する前後でインデックスがズレた場合，どっちのバッファーを参照すればいいかわからなくなる
-        # 要素のインデックスではなく名前を記録する
-          # せっかく場合分けするんだからインデックスで記録する
-          # ファイル増えたらcurrent_index参照，ファイル減ったらprevious_index参照
-          # 更新する前にビルドスクリプトを呼ぶから情報は保持される
-          # ファイル数が変わらない状態，増えた数と減った数が等しい場合がある
-          # リネームとか
-    # 増減したファイル・変更されたファイルに対応する処理を分ける予定はないが，一応分けて記録する
-      # 二つの記録の重複はビルドスクリプト側で処理する
-    # modeによって記録する配列を変える
-  
-  
   # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
   #両方の配列に含まれる項目を抜き出す 
   both=(`{ echo "$(roster @)"; echo "$(roster ${target} ${mode} $(xor_buffer) @)"; } | sort | uniq -d`) 
@@ -232,8 +241,39 @@ array_diff_c () {
   # echo "${only[@]}" 
   IFS=${PRE_IFS} 
 }
-# array_diff_b
-# exit
+
+# 配列を比較する関数
+# 直前の状態変数を記録したい
+array_diff_d () { 
+  pre_mode=${mode};
+  rec_state; mode="uniq"; rec_state 
+    PRE_IFS=${IFS} 
+    IFS=$'\n' 
+    # echo "${array_state[$(( ${#array_state[@]} - 2 ))]}"
+    echo ああああああ
+    quaternion
+    reminiscence_state 0
+    
+    exit
+    
+    
+    # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
+    # Thanks to https://qiita.com/mtomoaki_96kg/items/ff82305f1ff4bb4c827c
+    both=(`{ echo "$(roster ${target} ${pre_mode} ${buffer} \*)"; echo "$(roster ${target} ${pre_mode} $(xor_buffer) \*)"; } | sort | uniq -d`) 
+    # previous_uniq=($({ echo "${both[*]}"; echo "$(roster ${target} ${mode} $(xor_buffer) \*)"; } | sort | uniq -u)) 
+    eval $(quaternion ${target} ${mode} $(xor_buffer))="($({ echo "${both[*]}"; echo "$(roster ${target} ${pre_mode} $(xor_buffer) \*)"; } | sort | uniq -u)) "
+    # current_uniq=($({ echo "${both[*]}"; echo "$(roster ${target} ${mode} ${buffer} \*)"; } | sort | uniq -u)) 
+    eval $(quaternion)="($({ echo "${both[*]}"; echo "$(roster ${target} ${pre_mode} ${buffer} \*)"; } | sort | uniq -u)) "
+    echo "both\n${both[*]}\nprevious\n$(roster ${target} ${mode} $(xor_buffer) \*)\ncurrent\n$(roster \*)" # デバッグ用
+    echo "$(xor_buffer)_uniq\n${B_uniq[*]}\n$(quaternion)\n${A_uniq[*]}" # デバッグ用
+    
+    exit
+    # eval $(xor_buffer)_uniq= 
+    # eval ${buffer}_uniq="${file}" 
+    # eval $(quaternion)[index]="$file" 
+    IFS=${PRE_IFS} 
+  rest_state; rest_state # mode 
+}
 
 
 
