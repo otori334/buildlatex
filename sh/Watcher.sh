@@ -27,6 +27,7 @@ array_state=()
 # 状態変数を定義する関数
 # 引数は二つ
 def_state () {
+  eval $1="$2"
   # ARRAY_STATE_NAMEは状態変数の名前を格納する配列
   ARRAY_STATE_NAME+=( $1 ) 
   # ARRAY_STATE_NUMBERはこれまでに定義された状態変数の数を格納する変数
@@ -45,6 +46,7 @@ def_state () {
     ARRAY_STATE_MINIMAL_HEAD="${ARRAY_STATE_MINIMAL[*]}"
   IFS=${PRE_IFS} 
 }
+# maximal
 
 # 状態変数一覧のindexを逆引きする関数 
 # reverse_state 
@@ -64,9 +66,6 @@ infl_state () {
   echo "${ARRAY_STATE_INFLUENCE[$(eval echo '$'ARRAY_STATE_NUMBER_$1)]}"
 }
 
-# 状態変数の影響力を比べる関数
-# まだ
-
 
 
 # str="target"
@@ -84,6 +83,7 @@ quaternion () {
   if [ $# -eq 0 ]; then 
     # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
     # 引数が無い場合は状態変数に対応した配列名を生成 
+    
     var_name="${target}_${mode}_${buffer}" 
     # reminiscence
   else 
@@ -93,6 +93,9 @@ quaternion () {
   str="var_name" 
   eval echo '$'$str 
 } 
+
+
+
 # if [ ${#ARRAY_STATE[@]} -eq 1 ] ; then 
   # 最初に定義された状態変数の場合
   # var_name="$2" 
@@ -116,6 +119,8 @@ rem_state () {
   if [ $# -eq 0 ]; then 
     # quaternionは全（予定）状態変数を直接読んでる
     quaternion
+    
+    
   else 
     # こっちは記録された状態変数配列の末尾を読んでるだけ
     echo "${array_state[$(( ${#array_state[@]} - $1 - 1 ))]}" 
@@ -134,6 +139,10 @@ def_state target TAR
 def_state mode MOD
 def_state buffer BUF
 
+
+echo $target
+echo $mode
+echo $buffer
 # exit
 
 
@@ -151,10 +160,20 @@ xor_buffer () {
 # グローバル変数である状態変数にスコープを与える関数 
 rec_state () { 
   # 各状態変数をarray_stateに記録する 
-  # quaternionは全（予定）状態変数を直接読んでる
-  array_state+=( $(quaternion) ) 
+  prov=()
+  for state in ${ARRAY_STATE_NAME[@]}; do 
+    eval prov+=( $(eval echo '"${'${state}'}"') ) 
+  done   
+  PRE_IFS=${IFS}; IFS=_
+    array_state+=( "$(echo "${prov[*]}")" ) 
+  IFS=${PRE_IFS} 
+  # array_state+=( $(quaternion) ) 
   echo "${array_state[@]}" # デバッグ用 
 } 
+
+# 状態変数の影響力を比べる機能を組み込みたい
+# まだ
+
 
 # グローバル変数である状態変数にスコープを与える関数，rec_stateと合わせて使う 
 rest_state () { 
