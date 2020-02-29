@@ -26,22 +26,23 @@ array_state=()
 # 状態変数を定義する関数 
 # 引数は二つ 
 def_state () { 
-  eval $1="$2" 
-  # ARRAY_STATE_NAMEは状態変数の名前を格納する配列 
-  ARRAY_STATE_NAME+=( $1 ) 
-  # ARRAY_STATE_NUMBERはこれまでに定義された状態変数の数を格納する変数 
-  ARRAY_STATE_NUMBER=${#ARRAY_STATE_NAME[@]} 
-  # ARRAY_STATE_MINIMALは状態変数の規定値を格納する配列 
-  # min_stateで参照する 
-  ARRAY_STATE_MINIMAL+=( $2 ) 
-  # ARRAY_STATE_INFLUENCEは状態変数の影響力を格納する配列 
-  # infl_stateで参照する 
-  ARRAY_STATE_INFLUENCE+=( $(( 10 - ${#ARRAY_STATE_NAME[@]} )) ) 
-  # ARRAY_STATE_NUMBER_$1は状態変数のindexを格納する変数（連想配列みたいに使う）
-  # rev_stateで使う 
-  eval ARRAY_STATE_NUMBER_$1=$(( ${#ARRAY_STATE_NAME[@]} - 1 )) 
-  # Thanks to https://qiita.com/mtomoaki_96Influencekg/items/ff82305f1ff4bb4c827c 
-  PRE_IFS=${IFS}; IFS=_ 
+  local PRE_IFS=${IFS} 
+    eval $1="$2" 
+    # ARRAY_STATE_NAMEは状態変数の名前を格納する配列 
+    ARRAY_STATE_NAME+=( $1 ) 
+    # ARRAY_STATE_NUMBERはこれまでに定義された状態変数の数を格納する変数 
+    ARRAY_STATE_NUMBER=${#ARRAY_STATE_NAME[@]} 
+    # ARRAY_STATE_MINIMALは状態変数の規定値を格納する配列 
+    # min_stateで参照する 
+    ARRAY_STATE_MINIMAL+=( $2 ) 
+    # ARRAY_STATE_INFLUENCEは状態変数の影響力を格納する配列 
+    # infl_stateで参照する 
+    ARRAY_STATE_INFLUENCE+=( $(( 10 - ${#ARRAY_STATE_NAME[@]} )) ) 
+    # ARRAY_STATE_NUMBER_$1は状態変数のindexを格納する変数（連想配列みたいに使う）
+    # rev_stateで使う 
+    eval ARRAY_STATE_NUMBER_$1=$(( ${#ARRAY_STATE_NAME[@]} - 1 )) 
+    # Thanks to https://qiita.com/mtomoaki_96Influencekg/items/ff82305f1ff4bb4c827c 
+  IFS=_ 
     ARRAY_STATE_MINIMAL_HEAD="${ARRAY_STATE_MINIMAL[*]}" 
   IFS=${PRE_IFS} 
 } 
@@ -67,14 +68,15 @@ infl_state () {
 # グローバル変数である状態変数にスコープを与える関数 
 check_state () { 
   # 各状態変数をarray_stateに記録する 
-  local maximal=() 
-  local state=0
-  for state in ${ARRAY_STATE_NAME[@]}; do 
-    eval maximal+=( $(eval echo '"${'${state}'}"') ) 
-  done 
-  PRE_IFS=${IFS}; IFS=_ 
+  local PRE_IFS=${IFS} 
+    local maximal=() 
+    local state=0 
+    for state in "${ARRAY_STATE_NAME[@]}"; do 
+      eval maximal+=( $(eval echo '"${'${state}'}"') ) 
+    done 
+  IFS=_ 
     ARRAY_STATE_MAXIMAL_HEAD="${maximal[*]}" 
-    array_state+=( "${maximal[*]}" ) 
+    array_state+=( "${ARRAY_STATE_MAXIMAL_HEAD}" ) 
   IFS=${PRE_IFS} 
 } 
 
@@ -82,53 +84,85 @@ check_state () {
 # check_stateをさかのぼって状態変数を読むことができる 
 # 現在の状態変数が知りたければ quaternion を使う 
 read_state () { 
-  if [ $# -eq 0 ]; then 
-    # echo "${ARRAY_STATE_MAXIMAL_HEAD}" 
-    # quaternion
-    check_state
-      echo "#array_state[@]5:${#array_state[@]}\narray_state[@]${array_state[@]}\n#part[@]${#part[@]}"
-      
-    rest_state
-    
-    echo "#array_state[@]1:${#array_state[@]}\narray_state[@]${array_state[@]}\n#part[@]${#part[@]}"
-    
-    
+  if [ $# -eq 0 ] || [ $1 -eq 0 ]; then 
+    check_state 
+      echo "${ARRAY_STATE_MAXIMAL_HEAD}" 
+    rest_state 
   else 
     echo "${array_state[$(( ${#array_state[@]} - $1 - 1 ))]}" 
   fi 
 } 
 
-
-
-
 # 配列名を生成する関数だった 
 quaternion () { 
-  check_state 
-    if [ $# -eq 0 ]; then 
-      # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
-      # 引数が無い場合は状態変数に対応した配列名を生成 
-      # var_name="${target}_${mode}_${buffer}" 
-      local var_name="${ARRAY_STATE_MAXIMAL_HEAD}" 
-    else 
-      # 引数で指定された配列名を生成 
-      # 引数で指定する場合，全部の状態変数を変えるのは大変だから，もっと賢くしたい 
-      local var_name="${1}_${2}_${3}" 
-    fi 
+  if [ $# -eq 0 ]; then 
+    read_state
+  else 
+    # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
+    # 引数で指定された配列名を生成 
+    # 引数で指定する場合，全部の状態変数を変えるのは大変だから，もっと賢くしたい 
+    local var_name="${1}_${2}_${3}" 
     local str="var_name" 
     eval echo '$'$str 
-  rest_state 
+  fi 
 } 
 
 # 引数で指定された配列名を生成する関数 
-# 遡ること
-# 引数で指定した部分を書き換える
-# 引数は三つ
+# 引数で指定した部分を書き換える 
+# 引数は三つ 
 # 
 spec_state () { 
   check_state 
   
   : 
   rest_state 
+} 
+
+# 定義されるよりも前に遡る場合はデフォルト値に書き換わるようにしようかな 
+
+# 状態変数の影響力を比べる機能を組み込みたい 
+# まだ 
+
+
+# グローバル変数である状態変数にスコープを与える関数，check_stateと合わせて使う 
+rest_state () { 
+  # 各状態変数をarray_stateの内容に戻す関数 
+  # Thanks to https://qiita.com/tommarute/items/0085e33ac9271fbd74e1 
+  # アンダーバー区切りの末尾要素から要素を抽出 
+  local PRE_IFS=${IFS}; IFS=${ORI_IFS} 
+  local part=( $( echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
+  # Thanks to https://qiita.com/b4b4r07/items/e56a8e3471fb45df2f59 
+  # 配列の末尾要素を読んで状態変数を復元（破壊的操作）
+  array_state=("${array_state[@]:0:$(( ${#array_state[@]} - 1 ))}") 
+  local index=0 
+  local state=0
+  for state in ${part[@]}; do 
+    eval $(echo "${ARRAY_STATE_NAME[${index}]}")="${state}" 
+    index=$(( index + 1 )) 
+  done 
+  IFS=${PRE_IFS} 
+} 
+
+def_state target target 
+def_state mode mode 
+def_state buffer buffer 
+# def_state target TAR 
+# def_state mode MOD 
+# def_state buffer BUF 
+
+
+# 擬4次元配列を格納する関数 
+roster() { 
+  # check_state 
+    if [ $# -eq 1 ]; then 
+      # Thanks to https://aki-yam.hatenablog.com/entry/20081105/1225865004 
+      # Thanks to https://orebibou.com/2015/01/シェルスクリプトでevalコマンドを用いた変数の2重/ 
+      # Thanks to https://qiita.com/mtomoaki_96kg/items/ff82305f1ff4bb4c827c 
+      eval echo '"${'$(quaternion)'['$1']}"' 
+    else 
+      eval echo '"${'$(quaternion $1 $2 $3)'['$4']}"' 
+    fi 
+  # rest_state 
 } 
 
 debug () { 
@@ -160,51 +194,6 @@ debug () {
   rest_state 
 } 
 
-
-# 定義されるよりも前に遡る場合はデフォルト値に書き換わるようにしようかな 
-
-# 状態変数の影響力を比べる機能を組み込みたい 
-# まだ 
-
-
-# グローバル変数である状態変数にスコープを与える関数，check_stateと合わせて使う 
-rest_state () { 
-  # 各状態変数をarray_stateの内容に戻す関数 
-  # Thanks to https://qiita.com/tommarute/items/0085e33ac9271fbd74e1 
-  # アンダーバー区切りの末尾要素から要素を抽出 
-  PRE_IFS=${IFS}; IFS=${ORI_IFS} 
-    # local 
-    part=( $( echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
-  IFS=${PRE_IFS} 
-  # Thanks to https://qiita.com/b4b4r07/items/e56a8e3471fb45df2f59 
-  # 配列の末尾要素を読んで状態変数を復元（破壊的操作）
-  array_state=("${array_state[@]:0:$(( ${#array_state[@]} - 1 ))}") 
-  local index=0 
-  local state=0
-  for state in ${part[@]}; do 
-    eval $(echo "${ARRAY_STATE_NAME[${index}]}")="${state}" 
-    index=$(( index + 1 )) 
-  done 
-} 
-
-def_state target TAR 
-def_state mode MOD 
-def_state buffer BUF 
-
-
-# 擬4次元配列を格納する関数 
-roster() { 
-  # check_state 
-    if [ $# -eq 1 ]; then 
-      # Thanks to https://aki-yam.hatenablog.com/entry/20081105/1225865004 
-      # Thanks to https://orebibou.com/2015/01/シェルスクリプトでevalコマンドを用いた変数の2重/ 
-      # Thanks to https://qiita.com/mtomoaki_96kg/items/ff82305f1ff4bb4c827c 
-      eval echo '"${'$(quaternion)'['$1']}"' 
-    else 
-      eval echo '"${'$(quaternion $1 $2 $3)'['$4']}"' 
-    fi 
-  # rest_state 
-} 
 
 # この関数が呼ばれたとき，二値の状態変数bufferが参照してないもう片方を返す関数 
 xor_buffer () { 
@@ -337,21 +326,16 @@ array_diff_c () {
 array_diff_d () { 
   pre_mode=${mode};
   check_state; mode="uniq"; debug 
-    PRE_IFS=${IFS} 
+    local PRE_IFS=${IFS} 
     IFS=$'\n' 
     # echo "${array_state[$(( ${#array_state[@]} - 2 ))]}"
-    echo ああああああ
-    read_state 0
-    echo "${#array_state[@]}ああああ${array_state[@]}" 
+    echo ああああああ    
     read_state 
-    echo "${#array_state[@]}ああああ${array_state[@]}" ; echo "終了"; exit 
-    echo "${#array_state[@]}"; echo "${array_state[@]}"
+    read_state 0
     read_state 1
-    echo "${#array_state[@]}"; echo "${array_state[@]}"
     read_state 2
-    echo "${#array_state[@]}"; echo "${array_state[@]}"
     read_state 3
-    echo "${#array_state[@]}"; echo "${array_state[@]}"
+    echo "終了"; exit 
     # read_state 2
     # read_state 3
     # exit 
