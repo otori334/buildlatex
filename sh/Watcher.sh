@@ -86,11 +86,11 @@ read_state () {
     # echo "${ARRAY_STATE_MAXIMAL_HEAD}" 
     # quaternion
     check_state
-      echo "5${#array_state[@]}ああああ${array_state[@]}\nいいいいい${#part[@]}"
+      echo "#array_state[@]5:${#array_state[@]}\narray_state[@]${array_state[@]}\n#part[@]${#part[@]}"
       
     rest_state
     
-    echo "1${#array_state[@]}ああああ${array_state[@]}\nいいいいい${#part[@]}"
+    echo "#array_state[@]1:${#array_state[@]}\narray_state[@]${array_state[@]}\n#part[@]${#part[@]}"
     
     
   else 
