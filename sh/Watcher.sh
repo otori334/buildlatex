@@ -13,7 +13,7 @@ if [ $# -ne 0 ]; then
   readonly TARGET_DIR=$@ 
 else 
   # 引数がなければsrc直下すべてのディレクトリを監視 
-  readonly TARGET_DIR=`find ${PROJECT_DIR}/src/ -type d -depth 1 | sed 's!^.*/!!' | sort -f` 
+  readonly TARGET_DIR=$(find ${PROJECT_DIR}/src/ -type d -depth 1 | sed 's!^.*/!!' | sort -f) 
 fi 
 # 監視間隔，秒で指定 
 readonly interval=1 
@@ -35,7 +35,7 @@ def_state () {
   # min_stateで参照する 
   ARRAY_STATE_MINIMAL+=( $2 ) 
   # ARRAY_STATE_INFLUENCEは状態変数の影響力を格納する配列 
-  # infl_stateで参照する
+  # infl_stateで参照する 
   ARRAY_STATE_INFLUENCE+=( $(( 10 - ${#ARRAY_STATE_NAME[@]} )) ) 
   # ARRAY_STATE_NUMBER_$1は状態変数のindexを格納する変数（連想配列みたいに使う）
   # rev_stateで使う 
@@ -74,7 +74,6 @@ rec_state () {
   PRE_IFS=${IFS}; IFS=_ 
     array_state+=( "$(echo "${maximal[*]}")" ) 
   IFS=${PRE_IFS} 
-  # echo "${array_state[@]}" # デバッグ用 
 } 
 
 # rec_stateをさかのぼって状態変数を参照する関数 
@@ -99,7 +98,6 @@ quaternion () {
     fi 
     str="var_name" 
     eval echo '$'$str 
-    # eval echo '$'$str 
   rest_state 
 } 
 
@@ -111,21 +109,38 @@ spec_state () {
   rest_state 
 } 
 
-
-# 定義されるよりも前に遡る場合はデフォルト値に書き換わるようにしようかな 
-
-
-# この関数が呼ばれたとき，二値の状態変数bufferが参照してないもう片方を返す関数 
-xor_buffer () { 
-  # -eqは文字の比較条件式に使えない 
-  if [ "${buffer}" = "A" ] ; then 
-    echo "B" 
-  else 
-    echo "A" 
-  fi 
+debug () { 
+  rec_state 
+    debug_level=1
+    if [ $# -eq 0 ]; then 
+      debug_argument=1 
+    else 
+      debug_argument=$1 
+    fi 
+    
+    if [ "${debug_level}" -ge "${debug_argument}" ]; then 
+      if [ $# -ge 2 ]; then 
+        case "$2" in 
+          files_in ) 
+            # echo "$(quaternion)[$3] = ${file}" 
+            echo "${array_state[@]}[$3] = ${file}" 
+            # echo "${array_state[@]}" 
+          ;;
+          update ) 
+            # echo "$(quaternion)[$3] = $(roster $3)" 
+            echo "${array_state[@]}[$3] = $(roster $3)" 
+            # echo "${array_state[@]}" 
+          ;;
+        esac
+      else 
+        echo "${array_state[@]}" 
+      fi 
+    fi 
+  rest_state 
 } 
 
 
+# 定義されるよりも前に遡る場合はデフォルト値に書き換わるようにしようかな 
 
 # 状態変数の影響力を比べる機能を組み込みたい 
 # まだ 
@@ -142,7 +157,7 @@ rest_state () {
   # Thanks to https://qiita.com/b4b4r07/items/e56a8e3471fb45df2f59 
   # 配列の末尾要素を読んで状態変数を復元（破壊的操作）
   array_state=("${array_state[@]:0:$(( ${#array_state[@]} - 1 ))}") 
-  index=0 
+  local index=0 
   for state in ${part[@]}; do 
     eval $(echo "${ARRAY_STATE_NAME[${index}]}")="${state}" 
     index=$(( index + 1 )) 
@@ -152,8 +167,8 @@ rest_state () {
 def_state target TAR 
 def_state mode MOD 
 def_state buffer BUF 
-# echo "${array_state[@]}"; rec_state; echo "${array_state[@]}"
-# echo "${array_state[@]}"; rest_state; echo "${array_state[@]}"
+# echo "${array_state[@]}"; rec_state; debug 
+# echo "${array_state[@]}"; rest_state; debug 
   
 # echo "終了"; exit 
 
@@ -172,66 +187,76 @@ roster() {
   # rest_state 
 } 
 
+# この関数が呼ばれたとき，二値の状態変数bufferが参照してないもう片方を返す関数 
+xor_buffer () { 
+  # -eqは文字の比較条件式に使えない 
+  if [ "${buffer}" = "A" ] ; then 
+    echo "B" 
+  else 
+    echo "A" 
+  fi 
+} 
 
 # target中のファイル名一覧を格納・更新する関数 
 files_in () { 
-  rec_state; mode="file"; rec_state; echo "${array_state[@]}" 
+  rec_state 
+    mode="file"; debug 
     # Thanks to https://aimstogeek.hatenablog.com/entry/2016/02/07/000318 
     # シェルスクリプトでfindした結果を配列で受け取る 
     # Thanks to https://qiita.com/catfist/items/ef5b6496f5ce7b0abcc2 
     # .DS_Store 無視 
-    index=0 
+    local index=0 
     # Thanks to https://www.marketechlabo.com/bash-batch-best-practice/ 
     # sed 's!^.*/!!'何かわからないけど多分パスの後ろの/を削ってる・無いと動かない 
-    for file in `find ${PROJECT_DIR}/src/${target} -type f -maxdepth 2 ! -name .DS_Store | sed 's!^.*/!!' | sort -n`; do 
-      eval $(quaternion)[index]="${file}" 
-      # echo "$(quaternion)[${index}] = ${file}" # デバッグ用 
-      # echo "${array_state[@]}[${index}] = ${file}" # デバッグ用 
+    for file in $(find ${PROJECT_DIR}/src/${target} -type f -maxdepth 2 ! -name .DS_Store | sed 's!^.*/!!' | sort -n); do 
+      eval $(quaternion)[${index}]="${file}" 
+      debug 2 files_in ${index}
       # Thanks to http://unix.oskp.net/shellscript/while_until.html 
       # Thanks to https://qiita.com/d_nishiyama85/items/a117d59a663cfcdea5e4 
       index=$(( index + 1 )) 
     done 
-  rest_state; rest_state; echo "${array_state[@]}"  # mode 
+  rest_state; 
 } 
 
 # ハッシュ値を更新する関数 
 update_hash () { 
   # Thanks to https://qiita.com/tamanobi/items/74b62e25506af394eae5 
-  echo `openssl sha256 -r $1 | awk '{print $1}'` 
+  echo $(openssl sha256 -r $1 | awk '{print $1}') 
 } 
 
 # ハッシュ値一覧を4次元配列に格納・更新する関数 
 update () { 
-  rec_state; mode="hash"; rec_state; echo "${array_state[@]}" 
+  rec_state 
+    mode="hash"; debug 
     # ファイル名一覧を格納・更新 
     files_in 
     cd ${PROJECT_DIR}/src/${target} 
-    index=0 
+    local index=0 
     for file in $(roster ${target} "file" ${buffer} @); do 
+      # debug 
       # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
       # bashで文字列を変数名に展開する方法 
-      eval $(quaternion)[index]=`update_hash ${file}` 
-      # echo "$(quaternion)[${index}] = $(roster ${index})" # デバッグ用 
-      # echo "${array_state[@]}[${index}] = $(roster ${index})" # デバッグ用 
+      eval $(quaternion)[${index}]=$(update_hash ${file}) 
+      debug 2 update ${index}
       index=$(( index + 1 )) 
     done 
-  rest_state; rest_state; echo "${array_state[@]}"  # mode 
+  rest_state 
 } 
 
 # ハッシュ値の初期値を取得する関数 
 initial_hash () { 
-  rec_state; buffer="B"; rec_state; echo "${array_state[@]}" 
+  rec_state 
+    buffer="B"; debug 
     for target in ${TARGET_DIR}; do 
-      rec_state; echo "${array_state[@]}"  # target 
-        update 
-      rest_state; echo "${array_state[@]}"  # target 
+      debug 
+      update 
     done 
-  rest_state; rest_state; echo "${array_state[@]}"  # buffer 
+  rest_state; 
 } 
 
 array_diff_a () { 
-  rec_state; mode="hash"; rec_state; echo "${array_state[@]}" 
-    
+  rec_state 
+    mode="hash"; debug 
     if [ "$(roster @)" != "$(roster ${target} ${mode} $(xor_buffer) @)" ] ; then 
       echo "ハッシュが変わった場合" 
       # array_diff_b
@@ -239,12 +264,13 @@ array_diff_a () {
     else 
       echo "ハッシュが変わらない場合" 
     fi
-  rest_state; rest_state; echo "${array_state[@]}"  # mode 
+  rest_state 
 }
 
 # ファイルの変更を検知する関数 
 array_diff_b () { 
-  rec_state; mode="hash"; rec_state; echo "${array_state[@]}" 
+  rec_state 
+    mode="hash"; debug 
     previous_index=$(eval echo '${#'$(quaternion ${target} ${mode} $(xor_buffer))'[@]}')
     current_index=$(eval echo '${#'$(quaternion)'[@]}')
     echo "${array_state[@]} P${previous_index}\n${array_state[@]} C${current_index}" # デバッグ用 
@@ -276,7 +302,7 @@ array_diff_b () {
         
       fi
     fi
-  rest_state; rest_state; echo "${array_state[@]}"  # mode 
+  rest_state 
 }
 
 array_diff_c () { 
@@ -287,7 +313,7 @@ array_diff_c () {
 # 直前の状態変数を記録したい
 array_diff_d () { 
   pre_mode=${mode};
-  rec_state; mode="uniq"; rec_state; echo "${array_state[@]}" 
+  rec_state; mode="uniq"; debug 
     PRE_IFS=${IFS} 
     IFS=$'\n' 
     # echo "${array_state[$(( ${#array_state[@]} - 2 ))]}"
@@ -296,7 +322,7 @@ array_diff_d () {
     rem_state 1
     rem_state 2
     rem_state 3
-    exit
+    # exit 
     
     
     # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
@@ -306,7 +332,8 @@ array_diff_d () {
     eval $(quaternion ${target} ${mode} $(xor_buffer))="($({ echo "${both[*]}"; echo "$(roster ${target} ${pre_mode} $(xor_buffer) \*)"; } | sort | uniq -u)) "
     # current_uniq=($({ echo "${both[*]}"; echo "$(roster ${target} ${mode} ${buffer} \*)"; } | sort | uniq -u)) 
     eval $(quaternion)="($({ echo "${both[*]}"; echo "$(roster ${target} ${pre_mode} ${buffer} \*)"; } | sort | uniq -u)) "
-    echo "both\n${both[*]}\nprevious\n$(roster ${target} ${mode} $(xor_buffer) \*)\ncurrent\n$(roster \*)" # デバッグ用
+    # echo "both\n${both[*]}"
+    echo "previous\n$(roster ${target} ${mode} $(xor_buffer) \*)\ncurrent\n$(roster \*)" # デバッグ用
     echo "$(xor_buffer)_uniq\n${B_uniq[*]}\n$(quaternion)\n${A_uniq[*]}" # デバッグ用
     
     exit
@@ -314,7 +341,7 @@ array_diff_d () {
     # eval ${buffer}_uniq="${file}" 
     # eval $(quaternion)[index]="$file" 
     IFS=${PRE_IFS} 
-  rest_state; rest_state; echo "${array_state[@]}"  # mode 
+  rest_state; debug 
 }
 
 
@@ -338,42 +365,41 @@ initial_hash
 # rm empty1.out
 
 # 監視開始 
-rec_state; echo "${array_state[@]}" 
+rec_state; debug 
   while true; do 
     while true; do 
       while true; do 
         for buffer in "A" "B"; do 
-          rec_state; echo "${array_state[@]}" # buffer 
+          rec_state; debug # buffer 
             # sleep $interval 
             for target in ${TARGET_DIR}; do 
-              rec_state; echo "${array_state[@]}"  # target 
+              rec_state; debug  # target 
 
                 cd ${PROJECT_DIR}/src/eq
                 rm empty1.out
                 
-                update                 
-                array_diff_a
-                exit
+                update 
+                array_diff_a 
+                exit 
                 # array_diff_b 
-              rest_state; echo "${array_state[@]}"  # target 
-            done
+              rest_state; debug  # target 
+            done 
             # roster @ 
             # echo "" 
-          rest_state; echo "${array_state[@]}"  # buffer 
+          rest_state; debug  # buffer 
           exit 
-        done
-      done
-      exit
+        done 
+      done 
+      exit 
     done 
   done 
-rest_state; echo "${array_state[@]}"  # 監視終了 
-exit
+rest_state; debug  # 監視終了 
+exit 
 
-#eval  ${PROJECT_DIR}/sh/build.sh　aaaaaaaa
-nowdate=`date '+%Y/%m/%d'`
-nowtime=`date '+%H:%M:%S'`
-no=`expr $no + 1`
-${PROJECT_DIR}/sh/build.sh $no $nowdate $nowtime $c&
-#${PROJECT_DIR}/sh/test.sh $no $nowdate $nowtime $c&
-echo "update_hashd\nno:$no\ndate:$nowdate\ntime:$nowtime\nfile:$c\n"
-
+#eval  ${PROJECT_DIR}/sh/build.sh　aaaaaaaa 
+nowdate=`date '+%Y/%m/%d'` 
+nowtime=`date '+%H:%M:%S'` 
+no=`expr $no + 1` 
+${PROJECT_DIR}/sh/build.sh $no $nowdate $nowtime $c& 
+#${PROJECT_DIR}/sh/test.sh $no $nowdate $nowtime $c& 
+echo "update_hashd\nno:$no\ndate:$nowdate\ntime:$nowtime\nfile:$c\n" 
