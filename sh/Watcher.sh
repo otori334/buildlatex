@@ -65,70 +65,91 @@ infl_state () {
 } 
 
 # グローバル変数である状態変数にスコープを与える関数 
-rec_state () { 
+check_state () { 
   # 各状態変数をarray_stateに記録する 
-  maximal=() 
+  local maximal=() 
+  local state=0
   for state in ${ARRAY_STATE_NAME[@]}; do 
     eval maximal+=( $(eval echo '"${'${state}'}"') ) 
   done 
   PRE_IFS=${IFS}; IFS=_ 
-    array_state+=( "$(echo "${maximal[*]}")" ) 
+    ARRAY_STATE_MAXIMAL_HEAD="${maximal[*]}" 
+    array_state+=( "${maximal[*]}" ) 
   IFS=${PRE_IFS} 
 } 
 
-# rec_stateをさかのぼって状態変数を参照する関数 
-# 記録された状態変数配列array_stateの末尾を読む
-# reminiscence_state，remember_state 
-rem_state () { 
-  echo "${array_state[$(( ${#array_state[@]} - $1 - 1 ))]}" 
+# 記録された状態変数を読む関数 
+# check_stateをさかのぼって状態変数を読むことができる 
+# 現在の状態変数が知りたければ quaternion を使う 
+read_state () { 
+  if [ $# -eq 0 ]; then 
+    # echo "${ARRAY_STATE_MAXIMAL_HEAD}" 
+    # quaternion
+    check_state
+      echo "5${#array_state[@]}ああああ${array_state[@]}\nいいいいい${#part[@]}"
+      
+    rest_state
+    
+    echo "1${#array_state[@]}ああああ${array_state[@]}\nいいいいい${#part[@]}"
+    
+    
+  else 
+    echo "${array_state[$(( ${#array_state[@]} - $1 - 1 ))]}" 
+  fi 
 } 
+
+
+
 
 # 配列名を生成する関数だった 
 quaternion () { 
-  rec_state 
+  check_state 
     if [ $# -eq 0 ]; then 
       # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
       # 引数が無い場合は状態変数に対応した配列名を生成 
       # var_name="${target}_${mode}_${buffer}" 
-      var_name="$(rem_state 0)" 
+      local var_name="${ARRAY_STATE_MAXIMAL_HEAD}" 
     else 
       # 引数で指定された配列名を生成 
       # 引数で指定する場合，全部の状態変数を変えるのは大変だから，もっと賢くしたい 
-      var_name="${1}_${2}_${3}" 
+      local var_name="${1}_${2}_${3}" 
     fi 
-    str="var_name" 
+    local str="var_name" 
     eval echo '$'$str 
   rest_state 
 } 
 
 # 引数で指定された配列名を生成する関数 
+# 遡ること
+# 引数で指定した部分を書き換える
+# 引数は三つ
+# 
 spec_state () { 
-  rec_state 
+  check_state 
   
   : 
   rest_state 
 } 
 
 debug () { 
-  rec_state 
-    debug_level=1
+  check_state 
+    local debug_level=1
     if [ $# -eq 0 ]; then 
-      debug_argument=1 
+      local debug_argument=1 
     else 
-      debug_argument=$1 
+      local debug_argument=$1 
     fi 
-    
     if [ "${debug_level}" -ge "${debug_argument}" ]; then 
       if [ $# -ge 2 ]; then 
         case "$2" in 
           files_in ) 
-            # echo "$(quaternion)[$3] = ${file}" 
-            echo "${array_state[@]}[$3] = ${file}" 
+            # echo "$(quaternion)[$3] = \"${file}\"" 
+            # echo "${array_state[@]}[$3] = \"${file}\"" 
             # echo "${array_state[@]}" 
           ;;
           update ) 
-            # echo "$(quaternion)[$3] = $(roster $3)" 
-            echo "${array_state[@]}[$3] = $(roster $3)" 
+            # echo "$(quaternion)[$3] = \"$(roster $3)\"" 
+            echo "${array_state[@]}[$3] = \"$(roster $3)\"" 
             # echo "${array_state[@]}" 
           ;;
         esac
@@ -146,18 +167,20 @@ debug () {
 # まだ 
 
 
-# グローバル変数である状態変数にスコープを与える関数，rec_stateと合わせて使う 
+# グローバル変数である状態変数にスコープを与える関数，check_stateと合わせて使う 
 rest_state () { 
   # 各状態変数をarray_stateの内容に戻す関数 
   # Thanks to https://qiita.com/tommarute/items/0085e33ac9271fbd74e1 
   # アンダーバー区切りの末尾要素から要素を抽出 
   PRE_IFS=${IFS}; IFS=${ORI_IFS} 
-    part=( $( rem_state 0 | tr -s '_' ' ') ) 
+    # local 
+    part=( $( echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
   IFS=${PRE_IFS} 
   # Thanks to https://qiita.com/b4b4r07/items/e56a8e3471fb45df2f59 
   # 配列の末尾要素を読んで状態変数を復元（破壊的操作）
   array_state=("${array_state[@]:0:$(( ${#array_state[@]} - 1 ))}") 
   local index=0 
+  local state=0
   for state in ${part[@]}; do 
     eval $(echo "${ARRAY_STATE_NAME[${index}]}")="${state}" 
     index=$(( index + 1 )) 
@@ -167,15 +190,11 @@ rest_state () {
 def_state target TAR 
 def_state mode MOD 
 def_state buffer BUF 
-# echo "${array_state[@]}"; rec_state; debug 
-# echo "${array_state[@]}"; rest_state; debug 
-  
-# echo "終了"; exit 
 
 
 # 擬4次元配列を格納する関数 
 roster() { 
-  # rec_state 
+  # check_state 
     if [ $# -eq 1 ]; then 
       # Thanks to https://aki-yam.hatenablog.com/entry/20081105/1225865004 
       # Thanks to https://orebibou.com/2015/01/シェルスクリプトでevalコマンドを用いた変数の2重/ 
@@ -199,23 +218,25 @@ xor_buffer () {
 
 # target中のファイル名一覧を格納・更新する関数 
 files_in () { 
-  rec_state 
+  check_state 
     mode="file"; debug 
     # Thanks to https://aimstogeek.hatenablog.com/entry/2016/02/07/000318 
     # シェルスクリプトでfindした結果を配列で受け取る 
     # Thanks to https://qiita.com/catfist/items/ef5b6496f5ce7b0abcc2 
     # .DS_Store 無視 
     local index=0 
+    local file=0 
     # Thanks to https://www.marketechlabo.com/bash-batch-best-practice/ 
     # sed 's!^.*/!!'何かわからないけど多分パスの後ろの/を削ってる・無いと動かない 
     for file in $(find ${PROJECT_DIR}/src/${target} -type f -maxdepth 2 ! -name .DS_Store | sed 's!^.*/!!' | sort -n); do 
       eval $(quaternion)[${index}]="${file}" 
+      # eval $(read_state)[${index}]="${file}" 
       debug 2 files_in ${index}
       # Thanks to http://unix.oskp.net/shellscript/while_until.html 
       # Thanks to https://qiita.com/d_nishiyama85/items/a117d59a663cfcdea5e4 
       index=$(( index + 1 )) 
     done 
-  rest_state; 
+  rest_state 
 } 
 
 # ハッシュ値を更新する関数 
@@ -226,18 +247,19 @@ update_hash () {
 
 # ハッシュ値一覧を4次元配列に格納・更新する関数 
 update () { 
-  rec_state 
+  check_state 
     mode="hash"; debug 
     # ファイル名一覧を格納・更新 
     files_in 
     cd ${PROJECT_DIR}/src/${target} 
     local index=0 
+    local file=0 
     for file in $(roster ${target} "file" ${buffer} @); do 
       # debug 
       # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
       # bashで文字列を変数名に展開する方法 
       eval $(quaternion)[${index}]=$(update_hash ${file}) 
-      debug 2 update ${index}
+      debug 2 update ${index} 
       index=$(( index + 1 )) 
     done 
   rest_state 
@@ -245,17 +267,18 @@ update () {
 
 # ハッシュ値の初期値を取得する関数 
 initial_hash () { 
-  rec_state 
+  check_state 
     buffer="B"; debug 
+    local target=0 
     for target in ${TARGET_DIR}; do 
       debug 
       update 
     done 
-  rest_state; 
+  rest_state 
 } 
 
 array_diff_a () { 
-  rec_state 
+  check_state 
     mode="hash"; debug 
     if [ "$(roster @)" != "$(roster ${target} ${mode} $(xor_buffer) @)" ] ; then 
       echo "ハッシュが変わった場合" 
@@ -265,11 +288,11 @@ array_diff_a () {
       echo "ハッシュが変わらない場合" 
     fi
   rest_state 
-}
+} 
 
 # ファイルの変更を検知する関数 
 array_diff_b () { 
-  rec_state 
+  check_state 
     mode="hash"; debug 
     previous_index=$(eval echo '${#'$(quaternion ${target} ${mode} $(xor_buffer))'[@]}')
     current_index=$(eval echo '${#'$(quaternion)'[@]}')
@@ -313,15 +336,24 @@ array_diff_c () {
 # 直前の状態変数を記録したい
 array_diff_d () { 
   pre_mode=${mode};
-  rec_state; mode="uniq"; debug 
+  check_state; mode="uniq"; debug 
     PRE_IFS=${IFS} 
     IFS=$'\n' 
     # echo "${array_state[$(( ${#array_state[@]} - 2 ))]}"
     echo ああああああ
-    rem_state 0
-    rem_state 1
-    rem_state 2
-    rem_state 3
+    read_state 0
+    echo "${#array_state[@]}ああああ${array_state[@]}" 
+    read_state 
+    echo "${#array_state[@]}ああああ${array_state[@]}" ; echo "終了"; exit 
+    echo "${#array_state[@]}"; echo "${array_state[@]}"
+    read_state 1
+    echo "${#array_state[@]}"; echo "${array_state[@]}"
+    read_state 2
+    echo "${#array_state[@]}"; echo "${array_state[@]}"
+    read_state 3
+    echo "${#array_state[@]}"; echo "${array_state[@]}"
+    # read_state 2
+    # read_state 3
     # exit 
     
     
@@ -334,7 +366,7 @@ array_diff_d () {
     eval $(quaternion)="($({ echo "${both[*]}"; echo "$(roster ${target} ${pre_mode} ${buffer} \*)"; } | sort | uniq -u)) "
     # echo "both\n${both[*]}"
     echo "previous\n$(roster ${target} ${mode} $(xor_buffer) \*)\ncurrent\n$(roster \*)" # デバッグ用
-    echo "$(xor_buffer)_uniq\n${B_uniq[*]}\n$(quaternion)\n${A_uniq[*]}" # デバッグ用
+    # echo "$(xor_buffer)_uniq\n${B_uniq[*]}\n$(quaternion)\n${A_uniq[*]}" # デバッグ用
     
     exit
     # eval $(xor_buffer)_uniq= 
@@ -357,44 +389,39 @@ processing () {
   # whileと組み合わせてファイルから行を読み込む
 }
 
-# cd ${PROJECT_DIR}/src/eq
-# touch empty1.out
-cd ${PROJECT_DIR}/src/eq
-touch empty1.out
+# cd ${PROJECT_DIR}/src/eq 
+# touch empty1.out 
+cd ${PROJECT_DIR}/src/eq 
+touch empty1.out 
 initial_hash 
 # rm empty1.out
 
 # 監視開始 
-rec_state; debug 
+check_state
   while true; do 
     while true; do 
       while true; do 
         for buffer in "A" "B"; do 
-          rec_state; debug # buffer 
-            # sleep $interval 
-            for target in ${TARGET_DIR}; do 
-              rec_state; debug  # target 
-
-                cd ${PROJECT_DIR}/src/eq
-                rm empty1.out
-                
-                update 
-                array_diff_a 
-                exit 
-                # array_diff_b 
-              rest_state; debug  # target 
-            done 
-            # roster @ 
-            # echo "" 
-          rest_state; debug  # buffer 
+          # sleep $interval 
+          for target in ${TARGET_DIR}; do 
+            cd ${PROJECT_DIR}/src/eq
+            rm empty1.out
+            
+            update 
+            array_diff_a 
+            exit 
+            # array_diff_b 
+          done 
+          # roster @ 
+          # echo "" 
           exit 
         done 
       done 
       exit 
     done 
   done 
-rest_state; debug  # 監視終了 
-exit 
+rest_state
+exit # 監視終了 
 
 #eval  ${PROJECT_DIR}/sh/build.sh　aaaaaaaa 
 nowdate=`date '+%Y/%m/%d'` 
