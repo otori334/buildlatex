@@ -1,37 +1,24 @@
 #!/bin/sh 
 
-# 区切り文字の設定を保存 
-# Thanks to http://capm-network.com/?tag=シェルスクリプト-スペースが含まれる文字列を扱う 
-readonly ORI_IFS=${IFS} 
-## 実行スクリプトの保管 
-readonly PID=$$ 
-readonly PROJECT_DIR=$(cd $(dirname $0); cd ../; pwd) 
-readonly CURRENT_BRANCH=$(cd ${PROJECT_DIR}; git rev-parse --abbrev-ref HEAD) 
-# 引数処理 
-if [ $# -ne 0 ]; then 
-  # 引数で注目するディレクトリ（TARGET_DIR）をsrc直下のディレクトリの中から選び指定 
-  readonly TARGET_DIR=$@ 
-else 
-  # 引数がなければsrc直下すべてのディレクトリを監視 
-  readonly TARGET_DIR=$(find ${PROJECT_DIR}/src/ -type d -depth 1 | sed 's!^.*/!!' | sort -f) 
-fi 
-# 監視間隔，秒で指定 
-readonly interval=1 
-# 変化検後にインクリメントさせる変数 
-counter=0 
-
-# 状態変数を記録する配列 
-array_state=() 
-
 # 状態変数を定義する関数 
 # 引数は二つ 
 def_state () { 
   local PRE_IFS=${IFS} 
-    eval $1="$1" 
+    if [ $# -eq 1 ]; then 
+      eval $1="$1" 
+    else 
+      if [ $# -eq 2 ]; then 
+        eval $1="$2" 
+      fi 
+    fi 
     # ARRAY_STATE_NAMEは状態変数の名前を格納する配列 
     ARRAY_STATE_NAME+=( $1 ) 
     # ARRAY_STATE_NUMBERはこれまでに定義された状態変数の数を格納する変数 
     ARRAY_STATE_NUMBER=${#ARRAY_STATE_NAME[@]} 
+    if [ ${ARRAY_STATE_NUMBER} -eq 1 ]; then 
+      # 状態変数を記録する配列 
+      array_state=() 
+    fi 
     # ARRAY_STATE_MINIMALは状態変数の規定値を格納する配列 
     # min_stateで参照する 
     ARRAY_STATE_MINIMAL+=( $2 ) 
@@ -80,6 +67,25 @@ check_state () {
   IFS=${PRE_IFS} 
 } 
 
+# グローバル変数である状態変数にスコープを与える関数，check_stateと合わせて使う 
+rest_state () { 
+  # 各状態変数をarray_stateの内容に戻す関数 
+  # Thanks to https://qiita.com/tommarute/items/0085e33ac9271fbd74e1 
+  # アンダーバー区切りの末尾要素から要素を抽出 
+  local PRE_IFS=${IFS}; IFS=${ORI_IFS} 
+    local part=( $( echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
+    # Thanks to https://qiita.com/b4b4r07/items/e56a8e3471fb45df2f59 
+    # 配列の末尾要素を読んで状態変数を復元（破壊的操作）
+    array_state=( "${array_state[@]:0:$(( ${#array_state[@]} - 1 ))}" ) 
+    local index=0 
+    local state=0 
+    for state in "${part[@]}"; do 
+      eval $(echo "${ARRAY_STATE_NAME[${index}]}")="${state}" 
+      index=$(( index + 1 )) 
+    done 
+  IFS=${PRE_IFS} 
+} 
+
 # 記録された状態変数を読む関数 
 # check_stateをさかのぼって状態変数を読むことができる 
 read_state () { 
@@ -88,7 +94,10 @@ read_state () {
       echo "${ARRAY_STATE_MAXIMAL_HEAD}" 
     rest_state 
   else 
-    echo "${array_state[$(( ${#array_state[@]} - $1 - 1 ))]}" 
+    if [ "$2" = "debug" ]; then 
+      :
+    fi 
+    echo "${array_state[$(( ${#array_state[@]} - $1 ))]}" 
   fi 
 } 
 
@@ -110,7 +119,7 @@ spec_state () {
 # 引数で指定した部分を書き換える関数 
 # 第一引数は配列名，第二引数以降は書き換えたい状態変数と書き換える内容を交互にいれる 
 edit_state () { 
-  if [ $# -gt 1 ]; then 
+  if [ $# -ge 3 ]; then 
     local PRE_IFS=${IFS}; IFS=${ORI_IFS} 
       local part=( $( echo "$1" | tr -s '_' ' ') ) 
       if [ ${#part[@]} -ne $ARRAY_STATE_NUMBER ]; then 
@@ -136,33 +145,13 @@ edit_state () {
 # 状態変数の影響力を比べる機能を組み込みたい 
 # まだ 
 
-
-# グローバル変数である状態変数にスコープを与える関数，check_stateと合わせて使う 
-rest_state () { 
-  # 各状態変数をarray_stateの内容に戻す関数 
-  # Thanks to https://qiita.com/tommarute/items/0085e33ac9271fbd74e1 
-  # アンダーバー区切りの末尾要素から要素を抽出 
-  local PRE_IFS=${IFS}; IFS=${ORI_IFS} 
-    local part=( $( echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
-    # Thanks to https://qiita.com/b4b4r07/items/e56a8e3471fb45df2f59 
-    # 配列の末尾要素を読んで状態変数を復元（破壊的操作）
-    array_state=("${array_state[@]:0:$(( ${#array_state[@]} - 1 ))}") 
-    local index=0 
-    local state=0 
-    for state in "${part[@]}"; do 
-      eval $(echo "${ARRAY_STATE_NAME[${index}]}")="${state}" 
-      index=$(( index + 1 )) 
-    done 
-  IFS=${PRE_IFS} 
-} 
-
-def_state target 
-def_state mode 
-def_state buffer 
-
 # 擬多次元配列を参照する関数 
 # Thanks to https://aki-yam.hatenablog.com/entry/20081105/1225865004 
 roster() { 
+  if [ $# -eq 0 ]; then 
+    eval echo '"${'$(read_state)'[@]}"' 
+    return 
+  fi 
   if [ $# -eq 1 ]; then 
     eval echo '"${'$(read_state)'['$1']}"' 
     return 
@@ -178,7 +167,7 @@ roster() {
 debug () { 
   check_state 
     local debug_level=1
-    if [ $# -eq 0 ]; then 
+    if [ $# -eq 0 ] || [ $1 -eq 1 ]; then 
       local debug_argument=1 
     else 
       local debug_argument=$1 
@@ -276,15 +265,24 @@ initial_hash () {
   rest_state 
 } 
 
-array_diff_a () { 
+watcher () {
+  echo あああああああ
   check_state 
+    debug
     mode="hash"; debug 
-    if [ "$(roster @)" != "$(roster $(edit_state $(read_state) buffer $(xor_buffer)) @)" ] ; then 
+    # read_state 0 debug
+    read_state 1 debug
+    # local mode="hash"; debug 
+    # read_state 0 debug
+    read_state 1 debug
+    echo "終了"; exit 
+    
+    if [ "$(roster)" != "$(roster $(edit_state $(read_state) buffer $(xor_buffer)) @)" ] ; then 
       echo "ハッシュが変わった場合" 
-      # array_diff_b
-      array_diff_b
+      array_diff_b 
     else 
       echo "ハッシュが変わらない場合" 
+      : 
     fi
   rest_state 
 } 
@@ -298,7 +296,7 @@ array_diff_b () {
     echo "${array_state[@]} P${previous_index}\n${array_state[@]} C${current_index}" # デバッグ用 
     
     array_diff_d
-    echo "終了"; exit
+    echo "終了"; exit 
     
     if [ ${previous_index} -eq ${current_index} ] ; then 
       echo "ファイル数が変わらない場合" 
@@ -334,26 +332,20 @@ array_diff_c () {
 # 配列を比較する関数
 # 直前の状態変数を記録したい
 array_diff_d () { 
-  pre_mode=${mode};
-  check_state; mode="uniq"; debug 
+  check_state 
+    mode="uniq"; debug 
     local PRE_IFS=${IFS} 
     IFS=$'\n' 
-    # echo "${array_state[$(( ${#array_state[@]} - 2 ))]}"
-    echo ああああああ    
-    read_state 
-    read_state 0
-    read_state 1
-    read_state 2
-    read_state 3
+    
     # echo "終了"; exit 
     
     # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
     # Thanks to https://qiita.com/mtomoaki_96kg/items/ff82305f1ff4bb4c827c
-    both=(`{ echo "$(roster $(read_state 1) \*)"; echo "$(roster $(edit_state $(read_state 1) buffer $(xor_buffer)) \*)"; } | sort | uniq -d`) 
-    # previous_uniq=($({ echo "${both[*]}"; echo "$(roster $(edit_state $(read_state) buffer $(xor_buffer)) \*)"; } | sort | uniq -u)) 
-    eval $(edit_state $(read_state) buffer $(xor_buffer))="($({ echo "${both[*]}"; echo "$(roster $(edit_state $(read_state 1) buffer $(xor_buffer)) \*)"; } | sort | uniq -u)) "
-    # current_uniq=($({ echo "${both[*]}"; echo "$(roster $(read_state) \*)"; } | sort | uniq -u)) 
-    eval $(read_state)="($({ echo "${both[*]}"; echo "$(roster $(read_state 1) \*)"; } | sort | uniq -u)) "
+    both=( `{ echo "$(roster $(read_state 1) \*)"; echo "$(roster $(edit_state $(read_state 1) buffer $(xor_buffer)) \*)"; } | sort | uniq -d` ) 
+    # previous_uniq=( $({ echo "${both[*]}"; echo "$(roster $(edit_state $(read_state) buffer $(xor_buffer)) \*)"; } | sort | uniq -u) ) 
+    eval $(edit_state $(read_state) buffer $(xor_buffer))="( $({ echo "${both[*]}"; echo "$(roster $(edit_state $(read_state 1) buffer $(xor_buffer)) \* )"; } | sort | uniq -u)) "
+    # current_uniq=( $({ echo "${both[*]}"; echo "$(roster $(read_state) \*)"; } | sort | uniq -u) ) 
+    eval $(read_state)="( $({ echo "${both[*]}"; echo "$(roster $(read_state 1) \*)"; } | sort | uniq -u) ) "
     # echo "both\n${both[*]}"
     echo "previous\n$(roster $(edit_state $(read_state) buffer $(xor_buffer)) \*)\ncurrent\n$(roster \*)" # デバッグ用
     # echo "$(xor_buffer)_uniq\n${B_uniq[*]}\n$(read_state)\n${A_uniq[*]}" # デバッグ用
@@ -379,12 +371,37 @@ processing () {
   # whileと組み合わせてファイルから行を読み込む
 }
 
+# 区切り文字の設定を保存 
+# Thanks to http://capm-network.com/?tag=シェルスクリプト-スペースが含まれる文字列を扱う 
+readonly ORI_IFS=${IFS} 
+## 実行スクリプトの保管 
+readonly PID=$$ 
+readonly PROJECT_DIR=$(cd $(dirname $0); cd ../; pwd) 
+readonly CURRENT_BRANCH=$(cd ${PROJECT_DIR}; git rev-parse --abbrev-ref HEAD) 
+# 引数処理 
+if [ $# -ne 0 ]; then 
+  # 引数で注目するディレクトリ（TARGET_DIR）をsrc直下のディレクトリの中から選び指定 
+  readonly TARGET_DIR=$@ 
+else 
+  # 引数がなければsrc直下すべてのディレクトリを監視 
+  readonly TARGET_DIR=$(find ${PROJECT_DIR}/src/ -type d -depth 1 | sed 's!^.*/!!' | sort -f) 
+fi 
+# 監視間隔，秒で指定 
+readonly interval=1 
+# 変化検後にインクリメントさせる変数 
+counter=0 
+
+
+def_state buffer 
+def_state target 
+def_state mode 
+
 # cd ${PROJECT_DIR}/src/eq 
 # touch empty1.out 
 cd ${PROJECT_DIR}/src/eq 
 touch empty1.out 
 initial_hash 
-# rm empty1.out
+# rm empty1.out 
 
 # 監視開始 
 check_state
@@ -398,11 +415,11 @@ check_state
             rm empty1.out
             
             update 
-            array_diff_a 
+            watcher 
             exit 
             # array_diff_b 
           done 
-          # roster @ 
+          # roster 
           # echo "" 
           exit 
         done 
