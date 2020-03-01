@@ -2,6 +2,7 @@
 
 # 状態変数を定義する関数 
 # 引数は二つ 
+# ローカル変数の名前が状態変数の名前と衝突しないように注意する 
 def_state () { 
   local PRE_IFS=${IFS} 
     if [ $# -eq 1 ]; then 
@@ -56,13 +57,13 @@ infl_state () {
 check_state () { 
   # 各状態変数をarray_stateに記録する 
   local PRE_IFS=${IFS} 
-    local maximal=() 
-    local state=0 
-    for state in "${ARRAY_STATE_NAME[@]}"; do 
-      eval maximal+=( $(eval echo '"${'${state}'}"') ) 
+    local maximal_check=() 
+    local state_check=0 
+    for state_check in "${ARRAY_STATE_NAME[@]}"; do 
+      eval maximal_check+=( $(eval echo '"${'${state_check}'}"') ) 
     done 
   IFS=_ 
-    ARRAY_STATE_MAXIMAL_HEAD="${maximal[*]}" 
+    ARRAY_STATE_MAXIMAL_HEAD="${maximal_check[*]}" 
     array_state+=( "${ARRAY_STATE_MAXIMAL_HEAD}" ) 
   IFS=${PRE_IFS} 
 } 
@@ -73,15 +74,15 @@ rest_state () {
   # Thanks to https://qiita.com/tommarute/items/0085e33ac9271fbd74e1 
   # アンダーバー区切りの末尾要素から要素を抽出 
   local PRE_IFS=${IFS}; IFS=${ORI_IFS} 
-    local part=( $( echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
+    local part_rest=( $( echo "${array_state[$(( ${#array_state[@]} - 1 ))]}" | tr -s '_' ' ') ) 
     # Thanks to https://qiita.com/b4b4r07/items/e56a8e3471fb45df2f59 
     # 配列の末尾要素を読んで状態変数を復元（破壊的操作）
     array_state=( "${array_state[@]:0:$(( ${#array_state[@]} - 1 ))}" ) 
-    local index=0 
-    local state=0 
-    for state in "${part[@]}"; do 
-      eval $(echo "${ARRAY_STATE_NAME[${index}]}")="${state}" 
-      index=$(( index + 1 )) 
+    local index_rest=0 
+    local state_rest=0 
+    for state_rest in "${part_rest[@]}"; do 
+      eval $(echo "${ARRAY_STATE_NAME[${index_rest}]}")="${state_rest}" 
+      index_rest=$(( index_rest + 1 )) 
     done 
   IFS=${PRE_IFS} 
 } 
@@ -93,10 +94,9 @@ read_state () {
     check_state 
       echo "${ARRAY_STATE_MAXIMAL_HEAD}" 
     rest_state 
+    return 
   else 
-    if [ "$2" = "debug" ]; then 
-      :
-    fi 
+    debug 2 read_state $2 
     echo "${array_state[$(( ${#array_state[@]} - $1 ))]}" 
   fi 
 } 
@@ -105,10 +105,9 @@ read_state () {
 spec_state () { 
   if [ $# -eq $ARRAY_STATE_NUMBER ]; then 
     local PRE_IFS=${IFS} 
-      local maximal=( "$@" ) 
-      local state=0 
+      local maximal_spec=( "$@" ) 
     IFS=_ 
-      echo "${maximal[*]}" 
+      echo "${maximal_spec[*]}" 
     IFS=${PRE_IFS} 
     return 
   else 
@@ -121,18 +120,18 @@ spec_state () {
 edit_state () { 
   if [ $# -ge 3 ]; then 
     local PRE_IFS=${IFS}; IFS=${ORI_IFS} 
-      local part=( $( echo "$1" | tr -s '_' ' ') ) 
-      if [ ${#part[@]} -ne $ARRAY_STATE_NUMBER ]; then 
+      local part_edit=( $( echo "$1" | tr -s '_' ' ') ) 
+      if [ ${#part_edit[@]} -ne $ARRAY_STATE_NUMBER ]; then 
         : # エラーハンドリング 
         exit 1 
       fi 
       shift 1 
       until [ "$1" = "" ]; do 
-        part[$(rev_state $1)]="$2" 
+        part_edit[$(rev_state $1)]="$2" 
         shift 2 
       done 
     IFS=_ 
-      echo "${part[*]}" 
+      echo "${part_edit[*]}" 
     IFS=${PRE_IFS} 
   else 
     : # エラーハンドリング 
@@ -166,13 +165,13 @@ roster() {
 
 debug () { 
   check_state 
-    local debug_level=1
+    local level_debug=1
     if [ $# -eq 0 ] || [ $1 -eq 1 ]; then 
-      local debug_argument=1 
+      local argument_debug=1 
     else 
-      local debug_argument=$1 
+      local argument_debug=$1 
     fi 
-    if [ "${debug_level}" -ge "${debug_argument}" ]; then 
+    if [ "${level_debug}" -ge "${argument_debug}" ]; then 
       if [ $# -ge 2 ]; then 
         case "$2" in 
           files_in ) 
@@ -184,6 +183,11 @@ debug () {
             # echo "$(read_state)[$3] = \"$(roster $3)\"" 
             echo "${array_state[@]}[$3] = \"$(roster $3)\"" 
             # echo "${array_state[@]}" 
+          ;; 
+          read_state ) 
+            if [ "$3" = "debug" ]; then 
+              :
+            fi 
           ;; 
         esac 
       else 
@@ -212,17 +216,17 @@ files_in () {
     # シェルスクリプトでfindした結果を配列で受け取る 
     # Thanks to https://qiita.com/catfist/items/ef5b6496f5ce7b0abcc2 
     # .DS_Store 無視 
-    local index=0 
-    local file=0 
+    local index_files_in=0 
+    local file_files_in=0 
     # Thanks to https://www.marketechlabo.com/bash-batch-best-practice/ 
     # sed 's!^.*/!!'何かわからないけど多分パスの後ろの/を削ってる・無いと動かない 
-    for file in $(find ${PROJECT_DIR}/src/${target} -type f -maxdepth 2 ! -name .DS_Store | sed 's!^.*/!!' | sort -n); do 
-      eval $(read_state)[${index}]="${file}" 
-      # eval $(read_state)[${index}]="${file}" 
-      debug 2 files_in ${index}
+    for file_files_in in $(find ${PROJECT_DIR}/src/${target} -type f -maxdepth 2 ! -name .DS_Store | sed 's!^.*/!!' | sort -n); do 
+      eval $(read_state)[${index_files_in}]="${file_files_in}" 
+      # eval $(read_state)[${index_files_in}]="${file_files_in}" 
+      debug 2 files_in ${index_files_in}
       # Thanks to http://unix.oskp.net/shellscript/while_until.html 
       # Thanks to https://qiita.com/d_nishiyama85/items/a117d59a663cfcdea5e4 
-      index=$(( index + 1 )) 
+      index_files_in=$(( index_files_in + 1 )) 
     done 
   rest_state 
 } 
@@ -240,15 +244,15 @@ update () {
     # ファイル名一覧を格納・更新 
     files_in 
     cd ${PROJECT_DIR}/src/${target} 
-    local index=0 
-    local file=0 
+    local index_update=0 
+    local file_update=0 
     
-    for file in $(roster $(edit_state $(read_state) mode file) @); do 
+    for file_update in $(roster $(edit_state $(read_state) mode file) @); do 
       # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
       # bashで文字列を変数名に展開する方法 
-      eval $(read_state)[${index}]=$(update_hash ${file}) 
-      debug 2 update ${index} 
-      index=$(( index + 1 )) 
+      eval $(read_state)[${index_update}]=$(update_hash ${file_update}) 
+      debug 2 update ${index_update} 
+      index_update=$(( index_update + 1 )) 
     done 
   rest_state 
 } 
@@ -257,7 +261,6 @@ update () {
 initial_hash () { 
   check_state 
     buffer="B"; debug 
-    local target=0 
     for target in ${TARGET_DIR}; do 
       debug 
       update 
@@ -266,16 +269,11 @@ initial_hash () {
 } 
 
 watcher () {
-  echo あああああああ
+  echo "$0"
   check_state 
-    debug
     mode="hash"; debug 
-    # read_state 0 debug
-    read_state 1 debug
-    # local mode="hash"; debug 
-    # read_state 0 debug
-    read_state 1 debug
-    echo "終了"; exit 
+    # return
+    # echo "終了"; exit 
     
     if [ "$(roster)" != "$(roster $(edit_state $(read_state) buffer $(xor_buffer)) @)" ] ; then 
       echo "ハッシュが変わった場合" 
@@ -295,8 +293,8 @@ array_diff_b () {
     current_index=$(eval echo '${#'$(read_state)'[@]}')
     echo "${array_state[@]} P${previous_index}\n${array_state[@]} C${current_index}" # デバッグ用 
     
-    array_diff_d
     echo "終了"; exit 
+    array_diff_d
     
     if [ ${previous_index} -eq ${current_index} ] ; then 
       echo "ファイル数が変わらない場合" 
