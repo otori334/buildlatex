@@ -102,6 +102,7 @@ read_state () {
 } 
 
 # 引数で指定された配列名を生成する関数 
+# 状態変数の序列を変えるとバグるため非推奨 
 spec_state () { 
   if [ $# -eq $ARRAY_STATE_NUMBER ]; then 
     local PRE_IFS=${IFS} 
@@ -175,8 +176,8 @@ debug () {
       if [ $# -ge 2 ]; then 
         case "$2" in 
           files_in ) 
-            # echo "$(read_state)[$3] = \"${file}\"" 
-            # echo "${array_state[@]}[$3] = \"${file}\"" 
+            # echo "$(read_state)[$3] = \"${}\"" 
+            # echo "${array_state[@]}[$3] = \"${}\"" 
             # echo "${array_state[@]}" 
           ;; 
           update ) 
@@ -188,6 +189,9 @@ debug () {
             if [ "$3" = "debug" ]; then 
               :
             fi 
+          ;; 
+          * ) 
+            echo "$2"
           ;; 
         esac 
       else 
@@ -222,12 +226,15 @@ files_in () {
     # sed 's!^.*/!!'何かわからないけど多分パスの後ろの/を削ってる・無いと動かない 
     for file_files_in in $(find ${PROJECT_DIR}/src/${target} -type f -maxdepth 2 ! -name .DS_Store | sed 's!^.*/!!' | sort -n); do 
       eval $(read_state)[${index_files_in}]="${file_files_in}" 
-      # eval $(read_state)[${index_files_in}]="${file_files_in}" 
-      debug 2 files_in ${index_files_in}
+      eval "${buffer}"_$(echo "${file_files_in}" | tr '\,' '_' | tr '\.' '_' )="${index_files_in}" 
+      # eval echo '$'${buffer}'_'$(echo "${file_files_in}" | tr '\,' '_' | tr '\.' '_' )
+      
+      debug 2 files_in ${index_files_in} 
       # Thanks to http://unix.oskp.net/shellscript/while_until.html 
       # Thanks to https://qiita.com/d_nishiyama85/items/a117d59a663cfcdea5e4 
       index_files_in=$(( index_files_in + 1 )) 
     done 
+    # exit
   rest_state 
 } 
 
@@ -246,11 +253,11 @@ update () {
     cd ${PROJECT_DIR}/src/${target} 
     local index_update=0 
     local file_update=0 
-    
     for file_update in $(roster $(edit_state $(read_state) mode file) @); do 
       # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
       # bashで文字列を変数名に展開する方法 
       eval $(read_state)[${index_update}]=$(update_hash ${file_update}) 
+      eval "${buffer}"_$(roster ${index_update})="${file_update}" 
       debug 2 update ${index_update} 
       index_update=$(( index_update + 1 )) 
     done 
@@ -268,16 +275,81 @@ initial_hash () {
   rest_state 
 } 
 
-watcher () {
-  echo "$0"
+watcher () { 
   check_state 
     mode="hash"; debug 
-    # return
-    # echo "終了"; exit 
-    
     if [ "$(roster)" != "$(roster $(edit_state $(read_state) buffer $(xor_buffer)) @)" ] ; then 
-      echo "ハッシュが変わった場合" 
-      array_diff_b 
+      # 変化した場合 
+      mode="file"; debug 
+      local _vision1_watcher=$(read_state) 
+      local _vision2_watcher=$(edit_state $(read_state) buffer $(xor_buffer)) 
+      array_diff ${_vision1_watcher} ${_vision2_watcher} 
+      
+      # increase
+      # uniq1_array_diff
+      # $(edit_state $(read_state) mode increase)=(ao)
+      # eval $(edit_state $(read_state) mode increase)="${uniq1_array_diff[@]}"
+      # decrease
+      # uniq2_array_diff
+      # $(edit_state $(read_state) mode decrease)=(a)
+      # eval $(edit_state $(read_state) mode decrease)="${uniq2_array_diff[@]}"
+      
+      # array_state=( "${array_state[@]:0:$(( ${#array_state[@]} - 1 ))}" ) 
+      
+      
+      local _file_watcher=0 
+      # これから配列を作る
+      # roster \*で参照できるのは状態変数だけ
+      # 状態変数を作る
+      # 対象の buffer 不変， target 不変，比べる buffer 可変
+      # ファイル名からハッシュ値逆引き
+      # ここで ${both_array_diff[@]} の中には変わらなかったファイルの名前が入ってる
+      mode="hash"; debug 
+      local _index_watcher=0
+      for _file_watcher in ${both_array_diff[@]}; do 
+        eval $(edit_state $(read_state) mode current)[${_index_watcher}]=$(roster $(eval echo '$'${buffer}'_'$(echo "${_file_watcher}" | tr '\,' '_' | tr '\.' '_' ))) 
+        eval $(edit_state $(read_state) mode previous)[${_index_watcher}]=$(roster $(edit_state $(read_state) buffer $(xor_buffer)) $(eval echo '$'$(xor_buffer)'_'$(echo "${_file_watcher}" | tr '\,' '_' | tr '\.' '_' ))) 
+        _index_watcher=$(( _index_watcher + 1 )) 
+      done 
+      
+      _vision1_watcher=$(edit_state $(read_state) mode current) 
+      _vision2_watcher=$(edit_state $(read_state) mode previous) 
+      array_diff ${_vision1_watcher} ${_vision2_watcher} 
+      
+      rm empty2.out 
+      
+      
+      
+      echo "終了"; exit 
+      
+          eval $(read_state)[${index_update}]=$(update_hash ${file_update}) 
+          
+          edit_state $(read_state) mode current
+          roster $() 
+        # 変わらなかったファイルの過去のハッシュ値
+        buffer=$(xor_buffer)
+        # _vision1_watcher=+( ) 
+        _vision1_watcher=$(edit_state $(read_state) mode current)
+        # _vision2_watcher=+( ) 
+        echo "$(roster $(eval echo '$_'$(echo "${_file_watcher}" | tr '\,' '_' | tr '\.' '_' )))"
+        eval echo '$_'$(roster $(eval echo '$_'$(echo "${_file_watcher}" | tr '\,' '_' | tr '\.' '_' )))
+        
+        # eval echo '$_'$(roster $(eval echo '$_'$(echo "${file_watcher}" | tr '\,' '_' | tr '\.' '_' )))
+        
+        # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
+        # bashで文字列を変数名に展開する方法 
+        # eval $(read_state)[${index_update}]=$(update_hash ${file_update}) 
+        # eval _$(roster ${index_update})="${index_update}"         
+        # debug 2 watcher ${index_update} 
+        # index_update=$(( index_update + 1 )) 
+      
+      
+      vision1_watcher=$(read_state) 
+      vision2_watcher=$(edit_state $(read_state) buffer $(xor_buffer)) 
+      array_diff ${vision1_watcher} ${vision2_watcher} 
+      eval _$(echo "${file_files_in}" | sed 's/\./_/')="${index_files_in}" 
+      
+      
     else 
       echo "ハッシュが変わらない場合" 
       : 
@@ -285,78 +357,28 @@ watcher () {
   rest_state 
 } 
 
-# ファイルの変更を検知する関数 
-array_diff_b () { 
-  check_state 
-    mode="hash"; debug 
-    previous_index=$(eval echo '${#'$(edit_state $(read_state) buffer $(xor_buffer))'[@]}')
-    current_index=$(eval echo '${#'$(read_state)'[@]}')
-    echo "${array_state[@]} P${previous_index}\n${array_state[@]} C${current_index}" # デバッグ用 
-    
-    echo "終了"; exit 
-    array_diff_d
-    
-    if [ ${previous_index} -eq ${current_index} ] ; then 
-      echo "ファイル数が変わらない場合" 
-      # ファイルのハッシュ値を調べる
-      # array_diff_c 
-    else 
-      if [ ${previous_index} -lt ${current_index} ] ; then 
-        echo "ファイル数が増えた場合" 
-        # 増えたファイルを割り出す
-        # array_diff_b ${buffer} 
-        # cd ${PROJECT_DIR}/src/eq ; rm empty1.out
-        # 増えたファイル以外のハッシュ値を調べる
-        array_diff_c
-        
-      else 
-        echo "ファイル数が減った場合" 
-        # 減ったファイルを割り出す
-        # array_diff_b $(xor_buffer)
-        # ファイルを記録
-        
-        # 減ったファイル以外のハッシュ値を調べる
-        array_diff_c
-        
-      fi
-    fi
-  rest_state 
-}
+# 配列を比較する関数 
+# 直前の状態変数を記録したい 
 
-array_diff_c () { 
-  :
-}
-
-# 配列を比較する関数
-# 直前の状態変数を記録したい
-array_diff_d () { 
+array_diff () { 
   check_state 
-    mode="uniq"; debug 
-    local PRE_IFS=${IFS} 
-    IFS=$'\n' 
-    
-    # echo "終了"; exit 
-    
-    # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
-    # Thanks to https://qiita.com/mtomoaki_96kg/items/ff82305f1ff4bb4c827c
-    both=( `{ echo "$(roster $(read_state 1) \*)"; echo "$(roster $(edit_state $(read_state 1) buffer $(xor_buffer)) \*)"; } | sort | uniq -d` ) 
-    # previous_uniq=( $({ echo "${both[*]}"; echo "$(roster $(edit_state $(read_state) buffer $(xor_buffer)) \*)"; } | sort | uniq -u) ) 
-    eval $(edit_state $(read_state) buffer $(xor_buffer))="( $({ echo "${both[*]}"; echo "$(roster $(edit_state $(read_state 1) buffer $(xor_buffer)) \* )"; } | sort | uniq -u)) "
-    # current_uniq=( $({ echo "${both[*]}"; echo "$(roster $(read_state) \*)"; } | sort | uniq -u) ) 
-    eval $(read_state)="( $({ echo "${both[*]}"; echo "$(roster $(read_state 1) \*)"; } | sort | uniq -u) ) "
-    # echo "both\n${both[*]}"
-    echo "previous\n$(roster $(edit_state $(read_state) buffer $(xor_buffer)) \*)\ncurrent\n$(roster \*)" # デバッグ用
-    # echo "$(xor_buffer)_uniq\n${B_uniq[*]}\n$(read_state)\n${A_uniq[*]}" # デバッグ用
-    
-    exit
-    # eval $(xor_buffer)_uniq= 
-    # eval ${buffer}_uniq="${file}" 
-    # eval $(read_state)[index]="$file" 
+    local PRE_IFS=${IFS}; IFS=$'\n' 
+      # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
+      # Thanks to https://qiita.com/mtomoaki_96kg/items/ff82305f1ff4bb4c827c
+      both_array_diff=( $({ roster $1 \*; roster $2 \*; } | sort | uniq -d) ) 
+      uniq1_array_diff=( $({ echo "${both_array_diff[*]}"; roster $1 \*; } | sort | uniq -u) ) 
+      uniq2_array_diff=( $({ echo "${both_array_diff[*]}"; roster $2 \*; } | sort | uniq -u) ) 
+      echo "both_array_diff"
+      echo "${both_array_diff[@]}"
+      
+      echo "uniq1_array_diff"
+      echo "${uniq1_array_diff[@]}"
+      
+      echo "uniq2_array_diff"
+      echo "${uniq2_array_diff[@]}"
     IFS=${PRE_IFS} 
-  rest_state; debug 
-}
-
-
+  rest_state 
+} 
 
 processing () {  
   index=0
@@ -394,10 +416,14 @@ def_state buffer
 def_state target 
 def_state mode 
 
+
 # cd ${PROJECT_DIR}/src/eq 
 # touch empty1.out 
 cd ${PROJECT_DIR}/src/eq 
 touch empty1.out 
+
+touch empty2.out 
+
 initial_hash 
 # rm empty1.out 
 
@@ -411,6 +437,7 @@ check_state
           for target in ${TARGET_DIR}; do 
             cd ${PROJECT_DIR}/src/eq
             rm empty1.out
+            echo "hello" | tee empty2.out
             
             update 
             watcher 
