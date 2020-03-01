@@ -92,20 +92,6 @@ read_state () {
   fi 
 } 
 
-# 配列名を生成する関数だった 
-quaternion () { 
-  if [ $# -eq 0 ]; then 
-    read_state 
-  else 
-    # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
-    # 引数で指定された配列名を生成 
-    # 引数で指定する場合，全部の状態変数を変えるのは大変だから，もっと賢くしたい 
-    local var_name="${1}_${2}_${3}" 
-    local str="var_name" 
-    eval echo '$'$str 
-  fi 
-} 
-
 # 引数で指定された配列名を生成する関数 
 spec_state () { 
   if [ $# -eq $ARRAY_STATE_NUMBER ]; then 
@@ -174,21 +160,19 @@ def_state target
 def_state mode 
 def_state buffer 
 
-# 擬4次元配列を格納する関数 
+# 擬多次元配列を参照する関数 
+# Thanks to https://aki-yam.hatenablog.com/entry/20081105/1225865004 
 roster() { 
-  if [ $# -eq 0 ]; then 
-    eval echo '"${'$(read_state)'[@]}"' 
-  fi 
   if [ $# -eq 1 ]; then 
-    # Thanks to https://aki-yam.hatenablog.com/entry/20081105/1225865004 
-    # Thanks to https://qiita.com/mtomoaki_96kg/items/ff82305f1ff4bb4c827c 
     eval echo '"${'$(read_state)'['$1']}"' 
-  else 
-    eval echo '"${'$(quaternion $1 $2 $3)'['$4']}"' 
+    return 
   fi 
   if [ $# -eq 2 ]; then 
     eval echo '"${'$1'['$2']}"' 
+    return 
   fi 
+  : # エラーハンドリング 
+  exit 1 
 } 
 
 debug () { 
@@ -269,7 +253,8 @@ update () {
     cd ${PROJECT_DIR}/src/${target} 
     local index=0 
     local file=0 
-    for file in $(roster ${target} "file" ${buffer} @); do 
+    
+    for file in $(roster $(edit_state $(read_state) mode file) @); do 
       # Thanks to https://qiita.com/laikuaut/items/96dd37a8a59a87ece2ea 
       # bashで文字列を変数名に展開する方法 
       eval $(read_state)[${index}]=$(update_hash ${file}) 
@@ -294,7 +279,7 @@ initial_hash () {
 array_diff_a () { 
   check_state 
     mode="hash"; debug 
-    if [ "$(roster @)" != "$(roster ${target} ${mode} $(xor_buffer) @)" ] ; then 
+    if [ "$(roster @)" != "$(roster $(edit_state $(read_state) buffer $(xor_buffer)) @)" ] ; then 
       echo "ハッシュが変わった場合" 
       # array_diff_b
       array_diff_b
@@ -362,16 +347,15 @@ array_diff_d () {
     read_state 3
     # echo "終了"; exit 
     
-    
     # Thanks to https://anmino.hatenadiary.org/entry/20091020/1255988532 
     # Thanks to https://qiita.com/mtomoaki_96kg/items/ff82305f1ff4bb4c827c
-    both=(`{ echo "$(roster ${target} ${pre_mode} ${buffer} \*)"; echo "$(roster ${target} ${pre_mode} $(xor_buffer) \*)"; } | sort | uniq -d`) 
-    # previous_uniq=($({ echo "${both[*]}"; echo "$(roster ${target} ${mode} $(xor_buffer) \*)"; } | sort | uniq -u)) 
-    eval $(edit_state $(read_state) buffer $(xor_buffer))="($({ echo "${both[*]}"; echo "$(roster ${target} ${pre_mode} $(xor_buffer) \*)"; } | sort | uniq -u)) "
-    # current_uniq=($({ echo "${both[*]}"; echo "$(roster ${target} ${mode} ${buffer} \*)"; } | sort | uniq -u)) 
-    eval $(read_state)="($({ echo "${both[*]}"; echo "$(roster ${target} ${pre_mode} ${buffer} \*)"; } | sort | uniq -u)) "
+    both=(`{ echo "$(roster $(read_state 1) \*)"; echo "$(roster $(edit_state $(read_state 1) buffer $(xor_buffer)) \*)"; } | sort | uniq -d`) 
+    # previous_uniq=($({ echo "${both[*]}"; echo "$(roster $(edit_state $(read_state) buffer $(xor_buffer)) \*)"; } | sort | uniq -u)) 
+    eval $(edit_state $(read_state) buffer $(xor_buffer))="($({ echo "${both[*]}"; echo "$(roster $(edit_state $(read_state 1) buffer $(xor_buffer)) \*)"; } | sort | uniq -u)) "
+    # current_uniq=($({ echo "${both[*]}"; echo "$(roster $(read_state) \*)"; } | sort | uniq -u)) 
+    eval $(read_state)="($({ echo "${both[*]}"; echo "$(roster $(read_state 1) \*)"; } | sort | uniq -u)) "
     # echo "both\n${both[*]}"
-    echo "previous\n$(roster ${target} ${mode} $(xor_buffer) \*)\ncurrent\n$(roster \*)" # デバッグ用
+    echo "previous\n$(roster $(edit_state $(read_state) buffer $(xor_buffer)) \*)\ncurrent\n$(roster \*)" # デバッグ用
     # echo "$(xor_buffer)_uniq\n${B_uniq[*]}\n$(read_state)\n${A_uniq[*]}" # デバッグ用
     
     exit
