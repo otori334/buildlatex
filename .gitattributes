@@ -1,9 +1,8 @@
 *.png binary
 *.pdf binary
+src/* merge=ours
+src/eq/* merge=ours
 src/fig/* merge=ours
-src/*.md merge=ours
-src/md/*.md merge=ours
-src/md/references.bib merge=ours
-src/eq/*.tex merge=ours
+src/md/* merge=ours
 dest/* merge=ours
-data/* merge=ours
+dest/contents/* merge=ours
