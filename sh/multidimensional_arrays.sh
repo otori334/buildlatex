@@ -49,6 +49,12 @@ function min_state () {
   return 0 
 } 
 
+# 状態変数を規定値に戻す関数 
+# テストしてないし $(buffer="buffer"; read_state) の方が簡潔なので非推奨
+function rev_min_state () { 
+  eval $1="${ARRAY_STATE_MINIMAL[$(eval echo '$'ARRAY_STATE_NUMBER_$1)]}" 
+} 
+
 # 状態変数の影響力を調べる関数 
 # influence_state 
 function infl_state () { 
@@ -125,6 +131,7 @@ function spec_state () {
 
 # 引数で指定した部分を書き換える関数 
 # 第一引数は配列名，第二引数以降は書き換えたい状態変数と書き換える内容を交互にいれる 
+# "roster $(xor_buffer; read_state) '*'" のようにした方が簡潔 
 function edit_state () { 
   if [ $# -ge 3 ]; then 
     local _PRE_IFS=${IFS}; IFS=${ORI_IFS} 
@@ -148,8 +155,7 @@ function edit_state () {
   return 0 
 } 
 
-# 定義されるよりも前に遡る場合はデフォルト値に書き換わるようにしようかな 
-
+# 定義されるよりも前に遡る場合はデフォルト値に書き換わるようにしたい 
 # 状態変数の影響力を比べる機能を組み込みたい 
 # まだ 
 
