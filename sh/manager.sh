@@ -53,9 +53,3 @@ while true; do
   done 
 done 
 exit # 監視終了 
-
-nowdate=`date '+%Y/%m/%d'` 
-nowtime=`date '+%H:%M:%S'` 
-no=`expr $no + 1` 
-${PROJECT_DIR}/sh/build.sh $no $nowdate $nowtime $c& 
-echo "update_hashd\nno:$no\ndate:$nowdate\ntime:$nowtime\nfile:$c\n" 
