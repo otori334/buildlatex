@@ -55,6 +55,20 @@ function killtree() {
     kill -${_sig} ${_pid} 
 } 
 
+function deploy_file() { 
+  cd $1 
+  for _child in $(ls -F | grep /); do 
+    deploy_file ${_child} 
+  done 
+  if [ -e processing.sh ]; then 
+    ./processing.sh 
+    rm -f processing.sh 
+  fi 
+  mv * ../ 
+  cd ../ 
+  rm -rf $1 
+} 
+
 function cleanup_manager() { 
   index_pid=0 
   for target in ${TARGET_DIRNAME} 
