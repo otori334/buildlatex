@@ -18,12 +18,12 @@ else
   # readonly TARGET_DIRNAME=$(find ${PROJECT_DIR}/src/ -type d -depth 1 | sed 's!^.*/!!' | sort -f) 
 fi 
 # 監視間隔を秒で指定 
-readonly INTERVAL=3 
+readonly INTERVAL=1 
 def_state buffer "A" 
 def_state target 
 # Thanks to http://doi-t.hatenablog.com/entry/2013/12/07/023638 
 # Thanks to https://kiririmode.hatenablog.jp/entry/20160730/1469867810 
-trap cleanup_manager EXIT 
+trap 'kill $(jobs -p)' EXIT 
 index_pid=0 
 for target in ${TARGET_DIRNAME} 
 do 
@@ -53,7 +53,10 @@ do
       index_filename=$(( index_filename + 1 )) 
     done 
     if [ "$(roster $(xor_buffer; read_state) @)" != "$(roster @)" ] ; then 
-      kill -USR1 ${pid[${index_pid}]} 
+      kill ${pid[${index_pid}]} 
+      echo "${pid[${index_pid}]}"
+      ${PROJECT_DIR}/sh/watcher.sh ${target} & 
+      eval pid[${index_pid}]=$! 
     fi 
     index_pid=$(( index_pid + 1 )) 
   done 

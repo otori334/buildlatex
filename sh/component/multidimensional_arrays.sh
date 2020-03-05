@@ -1,16 +1,10 @@
 #!/bin/bash 
 
 # 状態変数を定義する関数 
-function def_state () { 
+function def_state() { 
   # 引数は二つでもいい 
   local _PRE_IFS=${IFS} 
-    if [ $# -eq 1 ]; then 
-      eval $1="$1" 
-    else 
-      if [ $# -eq 2 ]; then 
-        eval $1="$2" 
-      fi 
-    fi 
+    eval $1="${2:-$(eval echo "$1")}" 
     # ARRAY_STATE_NAMEは状態変数の名前を格納する配列 
     ARRAY_STATE_NAME+=( $1 ) 
     # ARRAY_STATE_NUMBERはこれまでに定義された状態変数の数を格納する変数 
@@ -37,33 +31,33 @@ function def_state () {
 
 # 状態変数一覧のindexを逆引きする関数 
 # reverse_state 
-function rev_state () { 
+function rev_state() { 
   eval echo '$'ARRAY_STATE_NUMBER_$1 
   return 0 
 } 
 
 # 状態変数の規定値を調べる関数 
 # minimal_state 
-function min_state () { 
+function min_state() { 
   echo "${ARRAY_STATE_MINIMAL[$(eval echo '$'ARRAY_STATE_NUMBER_$1)]}" 
   return 0 
 } 
 
 # 状態変数を規定値に戻す関数 
 # テストしてないし $(buffer="buffer"; read_state) の方が簡潔なので非推奨
-function rev_min_state () { 
+function rev_min_state() { 
   eval $1="${ARRAY_STATE_MINIMAL[$(eval echo '$'ARRAY_STATE_NUMBER_$1)]}" 
 } 
 
 # 状態変数の影響力を調べる関数 
 # influence_state 
-function infl_state () { 
+function infl_state() { 
   echo "${ARRAY_STATE_INFLUENCE[$(eval echo '$'ARRAY_STATE_NUMBER_$1)]}" 
   return 0 
 } 
 
 # グローバル変数である状態変数にスコープを与える関数 
-function check_state () { 
+function check_state() { 
   # 各状態変数をarray_stateに記録する 
   local _PRE_IFS=${IFS} 
     local _maximal_check=() 
@@ -79,7 +73,7 @@ function check_state () {
 } 
 
 # グローバル変数である状態変数にスコープを与える関数，check_stateと合わせて使う 
-function rest_state () { 
+function rest_state() { 
   # 各状態変数をarray_stateの内容に戻す関数 
   # Thanks to https://qiita.com/tommarute/items/0085e33ac9271fbd74e1 
   # アンダーバー区切りの末尾要素から要素を抽出 
@@ -100,7 +94,7 @@ function rest_state () {
 
 # 記録された状態変数を読む関数 
 # check_stateをさかのぼって状態変数を読むことができる 
-function read_state () { 
+function read_state() { 
   if [ $# -eq 0 ] || [ $1 -eq 0 ]; then 
     check_state 
       echo "${ARRAY_STATE_MAXIMAL_HEAD}" 
@@ -114,7 +108,7 @@ function read_state () {
 
 # 引数で指定された配列名を生成する関数 
 # 状態変数の序列を変えるとバグるため非推奨 
-function spec_state () { 
+function spec_state() { 
   if [ $# -eq $ARRAY_STATE_NUMBER ]; then 
     local _PRE_IFS=${IFS} 
       local _maximal_spec=( "$@" ) 
@@ -132,7 +126,7 @@ function spec_state () {
 # 引数で指定した部分を書き換える関数 
 # 第一引数は配列名，第二引数以降は書き換えたい状態変数と書き換える内容を交互にいれる 
 # "roster $(xor_buffer; read_state) '*'" のようにした方が簡潔 
-function edit_state () { 
+function edit_state() { 
   if [ $# -ge 3 ]; then 
     local _PRE_IFS=${IFS}; IFS=${ORI_IFS} 
       local _part_edit=( $( echo "$1" | tr -s '_' ' ') ) 

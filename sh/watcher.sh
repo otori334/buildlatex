@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+# 監視間隔を秒で指定 
+readonly INTERVAL=1 
 readonly CMDNAME=$(basename $0) 
 readonly PROJECT_DIR=$(cd $(dirname $0); cd ../; pwd) 
 . ${PROJECT_DIR}/sh/component/functions.sh 
@@ -26,44 +28,33 @@ else
   exit 1 
 fi 
 cd ${TARGET_DIR} 
-# 監視間隔を秒で指定 
-readonly INTERVAL=2 
+# trap '(kill $(jobs -p))||:' EXIT TERM 
 # 変化検知毎にインクリメントさせる変数 
 export counter=1 
+export filename=0 
 def_state buffer "A" 
-trap 'reload=2' USR1 
-reload=0 
+initial_hash 
+number_of_files=$(ls -U1 | wc -l) 
+xor_buffer 
 while true 
 do 
   index=0 
   for filename in * 
   do 
     eval $(read_state)[${index}]=$(update_hash ${filename}) 
-    index=$(( index + 1 )) 
-  done 
-  xor_buffer 
-  while true 
-  do 
-    now_time=${SECONDS} 
-    index=0 
-    if [ ${reload} -ne 0 ]; then 
-      reload=$(( reload - 1 )) 
+    if [ "$(roster $(xor_buffer; read_state) ${index})" != "$(roster ${index})" ]; then 
+      if [ ${number_of_files} -eq $(ls -U1 | wc -l) ]; then 
+        ${PROJECT_DIR}/sh/build.sh & 
+        counter=$(( counter + 1 )) 
+      else 
+        initial_hash 
+        number_of_files=$(ls -U1 | wc -l) 
+        # echo "aaaaaaaaaaoooooooooooooooooooooooooo" 
+      fi 
       xor_buffer 
       break 1 
-    fi
-    for filename in * 
-    do 
-      eval $(read_state)[${index}]=$(update_hash ${filename}) 
-      if [ "$(roster $(xor_buffer; read_state) ${index})" != "$(roster ${index})" ]; then 
-        ${PROJECT_DIR}/sh/build.sh ${counter} ${filename}& 
-        counter=$(( counter + 1 )) 
-        xor_buffer 
-        break 1 
-      fi 
-      index=$(( index + 1 )) 
-    done 
-    if [ $(( now_time + INTERVAL )) -gt ${SECONDS} ]; then 
-      sleep $(( now_time + INTERVAL - SECONDS )) 
     fi 
+    index=$(( index + 1 )) 
   done 
+  sleep INTERVAL 
 done 
