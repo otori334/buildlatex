@@ -15,20 +15,31 @@ function xor_buffer() {
 
 # ハッシュ値を更新する関数 
 function update_hash() { 
+  if [ ! -e $1 ]; then 
+    return 1 
+  fi 
   # Thanks to https://qiita.com/tamanobi/items/74b62e25506af394eae5 
   echo $(openssl sha256 -r $1 | awk '{print $1}') 
   return 0 
 } 
 
+# 配列を初期化する関数 
 function initial_hash() { 
-  local index=0 
-  local filename=0 
-  eval unset $(read_state) 
-  eval unset $(xor_buffer; read_state) 
-  for filename in * 
+  # ファイル数をグローバル変数に記録 
+  number_of_files=$(ls -U1 | wc -l) 
+  # 配列を初期化 
+  local _arrayname=0 
+  for _arrayname in $@ 
   do 
-    eval $(read_state)[${index}]=$(update_hash ${filename}) 
-    index=$(( index + 1 )) 
+    eval unset ${_arrayname} 
+  done 
+  # 第一引数で指定された配列にハッシュ値を格納 
+  local _index=0 
+  local _filename=0 
+  for _filename in * 
+  do 
+    eval $1[${_index}]=$(update_hash ${_filename}) 
+    _index=$(( _index + 1 )) 
   done 
 } 
 
