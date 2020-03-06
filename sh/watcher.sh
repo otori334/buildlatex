@@ -13,20 +13,22 @@ export TARGET_DIRNAME=${1:-md}
 cd ${PROJECT_DIR}/src/${TARGET_DIRNAME} || exit 1 
 export no=1 
 export filename=0 
-def_state buffer "A" 
-initial_hash $(xor_buffer; read_state) $(read_state) 
+# ファイル数を記録 
+number_of_files=$(ls -U1 | wc -l) 
+buffer="A" 
+initial_hash $(xor_buffer) ${buffer} 
 while true; do 
   index=0 
   for filename in *; do 
-    eval $(read_state)[${index}]="$(update_hash ${filename})" 
-    if [ "$(roster $(xor_buffer; read_state) ${index})" != "$(roster ${index})" ]; then 
+    eval ${buffer}[${index}]="$(update_hash ${filename})" 
+    if [ "${A[${index}]})" != "${B[${index}]})" ]; then 
       if [ ${number_of_files} -eq $(ls -U1 | wc -l) ]; then 
         ${PROJECT_DIR}/sh/build.sh & 
         no=$(( no + 1 )) 
-        xor_buffer 
+        buffer=$(xor_buffer) 
       else 
         no=1 
-        initial_hash $(xor_buffer; read_state) $(read_state) 
+        initial_hash $(xor_buffer) ${buffer} 
       fi 
       break 1 
     fi 

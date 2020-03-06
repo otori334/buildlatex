@@ -1,14 +1,12 @@
 #!/bin/bash 
 
-. ${PROJECT_DIR}/sh/component/multidimensional_arrays.sh 
-
 # この関数が呼ばれたとき，二値の状態変数 buffer が参照してないもう片方を返す 
 function xor_buffer() { 
   # -eqは文字の比較条件式に使えない 
   if [ "${buffer}" = "A" ] ; then 
-    buffer="B" 
+    echo "B" 
   else 
-    buffer="A" 
+    echo "A" 
   fi 
   return 0 
 } 
@@ -25,11 +23,8 @@ function update_hash() {
 
 # ハッシュ値の配列を初期化する関数 
 function initial_hash() { 
-  # ファイル数をグローバル変数に記録 
-  number_of_files=$(ls -U1 | wc -l) 
   # 配列を初期化 
-  for _arrayname in $@ 
-  do 
+  for _arrayname in $@; do 
     eval unset ${_arrayname} 
   done 
   # 第一引数で指定された配列にハッシュ値を格納 
@@ -41,17 +36,18 @@ function initial_hash() {
   done 
 } 
 
-# これはディレクトリ構成を再起的に溶かす危険な関数．取り扱い注意 
+# ディレクトリ構成を再帰的に溶かす危険な関数．取り扱い注意 
 function deploy_file() { 
   cd $1 
-  for _child in $(ls -F | grep /); do 
-    deploy_file ${_child} 
+  for _sub_dirname in $(ls -F | grep /); do 
+    deploy_file ${_sub_dirname} 
   done 
   # processing.sh という名前のファイルがあれば実行 
   if [ -e processing.sh ]; then 
     ./processing.sh 
     rm -f processing.sh 
   fi 
+  # mv も processing.sh に含める予定 
   mv * ../ 
   cd ../ 
   rm -rf $1 
