@@ -6,3 +6,4 @@ src/fig/* merge=ours
 src/md/* merge=ours
 dest/* merge=ours
 dest/contents/* merge=ours
+.gitattributes merge=ours
