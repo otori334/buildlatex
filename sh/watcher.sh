@@ -1,5 +1,6 @@
 #!/bin/bash 
 
+set -u 
 # 監視間隔を秒で指定 
 readonly INTERVAL=1 
 readonly PROJECT_DIR=$(cd $(dirname $0); cd ../; pwd) 
@@ -9,7 +10,7 @@ if [ $# -gt 1 ]; then
   exit 1 
 fi 
 export TARGET_DIRNAME=${1:-md} 
-cd ${PROJECT_DIR}/src/${TARGET_DIRNAME} 
+cd ${PROJECT_DIR}/src/${TARGET_DIRNAME} || exit 1 
 export no=1 
 export filename=0 
 def_state buffer "A" 

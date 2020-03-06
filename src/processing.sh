@@ -1,10 +1,5 @@
 #!/bin/bash 
 
-sed -i '' -e 's/\\,/\\mymysmallspace/g' *.md 
-sed -i '' -e 's/\\\\/\\mymynewline/g' *.md 
-sed -i '' -e 's/\\begin{comment}/<!--/g' *.md 
-sed -i '' -e 's/\\end{comment}/-->/g' *.md 
-
 pandoc ./*.md -N -o ./automatic_generated.tex \
 -F pandoc-crossref \
 --template=./boilerplate.tex \
@@ -16,6 +11,7 @@ pandoc ./*.md -N -o ./automatic_generated.tex \
 --toc-depth=2 \
 -M "crossrefYaml=./config.yml"
 
+# pandoc に解釈されないように書き換えてた LaTeX 風の書き方を元に戻す 
 sed -i '' -e 's/\\mymysmallspace/\\,/g' automatic_generated.tex 
 sed -i '' -e 's/\\mymynewline/\\\\/g' automatic_generated.tex 
 sed -i '' -e 's/\\cite\\{/~\\cite/g' automatic_generated.tex 
@@ -32,6 +28,4 @@ find . -name "*.tex-e" -exec rm {} \;
 cp ./automatic_generated.tex "${PROJECT_DIR}/dest/contents.tex"
 
 latexmk
-
-mv ./automatic_generated.pdf "${PROJECT_DIR}/dest/report.pdf"
-
+mv ${BUILD_DIR}/automatic_generated.pdf ${PROJECT_DIR}/dest/output.pdf 

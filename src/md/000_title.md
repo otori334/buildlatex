@@ -15,20 +15,20 @@ keywords:
   - 気体分子運動論
 #draft: \usepackage{graphicx}% dvipdfmx は自動的に有効になる
 draft: \usepackage[draft]{graphicx}% dvipdfmx は自動的に有効になる
-#date: \date{作成開始日：2019/12/03}
+#date: \date{作成開始日：}
 date: \date{提出日：\today}
-#titletableofcontents: \tableofcontents
-#titlenewpage: \newpage
-#titlepagenumber: \thispagestyle{empty}
+#titletableofcontents: \tableofcontents 
+#titlenewpage: \newpage 
+#titlepagenumber: \thispagestyle{empty} 
+abstractname: \renewcommand{\abstractname}{} 
 abstract: 
-abstractname: \renewcommand{\abstractname}{}
 header-includes:
   - 
 ---
 
 <!--
 <注意事項>
-1/11 の講義開始時にレポートを提出すること(教卓の上に提出しておいてください。その時間以 外は受け付けない)。 問題の解答は途中の計算過程も含めて記すこと。数値の単位を忘れないこと。
+1/11 の講義開始時にレポートを提出すること(教卓の上に提出しておいてください。その時間以外は受け付けない)。 問題の解答は途中の計算過程も含めて記すこと。数値の単位を忘れないこと。
 -->
 %\includepdf[nup=3x3,column,pages={1-43}]{01-06-2}
 %\includepdf[nup=3x3,column,pages={1-68}]{01-09-2}
