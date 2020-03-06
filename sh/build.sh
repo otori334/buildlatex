@@ -1,7 +1,6 @@
 #!/bin/bash 
 
 set -u 
-readonly CMDNAME=$(basename $0) 
 export PROJECT_DIR=$(cd $(dirname $0); cd ../; pwd) 
 . ${PROJECT_DIR}/sh/component/functions.sh 
 
@@ -15,9 +14,9 @@ trap 'rm -rf ${BUILD_DIR}' 1 2 3 15
 cp -R ${PROJECT_DIR}/src ${BUILD_DIR}/ 
 
 # ドットファイルをワイルドカードに含めるように設定 
-# Thanks to https://www.denet.ad.jp/technology/2018/10/cpcommand.html
+# Thanks to https://www.denet.ad.jp/technology/2018/10/cpcommand.html 
 shopt -s dotglob 
-# これはディレクトリを再起的に溶かす危険な関数．取り扱い注意 
+# これはディレクトリを再帰的に溶かす危険な関数．取り扱い注意 
 deploy_file ${BUILD_DIR}/src 
 # 中間生成ファイルを保存する 
 cp -R automatic_generated.* ../cache/ || mkdir -p ${BRANCH_DIR}/cache; cp -R automatic_generated.* ../cache/ 
