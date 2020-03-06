@@ -1,0 +1,164 @@
+
+{
+  "filters": {
+    "comments": true,
+      "whitelist": {
+        "allow": [
+          "%",
+          "\,",
+          "(NH3)",
+          "(ox)",
+          "(OH2)",
+          "(H2O)",
+          "($",
+          "\ce{NaCl}",
+          "\ce{NaOH}",
+          "\ce{HCl}",
+          "の分子",
+          "側基",
+          "基質",
+          "塩基",
+          "共役基",
+          "官能基",
+          "吸引基",
+          "電子供与基",
+          "アミド基",
+          "メチル基",
+          "カルボニル基",
+          "ブチル基",
+          "シアノ基",
+          "エチル基",
+          "）基",
+          ")基",
+          "/\\d{4}-\\d{2}-\\d{2}/", // <= 日付っぽい表現を無視
+          "/===IGNORE===[\\s\\S]*?===\/IGNORE===/m", // <= `===IGNORE===`で囲んだ範囲を無視
+          "/{{[a-zA-Z.]*?}}/",
+          "/\\$\\$[\\s\\S]*?\\$\\$/m" //https://qiita.com/azu/items/0f8ca9f1fd531d6b2f4b
+        ]
+      }
+  },
+  "rules": {
+    "preset-japanese": {
+             // https://github.com/textlint-ja/textlint-rule-max-ten
+             // 一文で使える"、"の数
+             "max-ten": {
+                 "max": 4
+             },
+             // https://github.com/takahashim/textlint-rule-no-doubled-conjunctive-particle-ga
+             // 逆接の接続助詞「が」が、同一文中に複数回出現していないかどうか
+             // e.g.) 今日は早朝から出発したが、定刻には間に合わなかったが、無事会場に到着した。
+             "no-doubled-conjunctive-particle-ga": true,
+             // https://github.com/takahashim/textlint-rule-no-doubled-conjunction
+             // 同じ接続詞が連続して出現していないかどうか
+             "no-doubled-conjunction": true,
+             // https://github.com/textlint-ja/textlint-rule-no-double-negative-ja
+             // 二重否定の検出
+             "no-double-negative-ja": true,
+             // https://github.com/textlint-ja/textlint-rule-no-doubled-joshi
+             // 二重助詞の検出
+             // 連続して同じ助詞が出た場合のみを検出
+             "no-doubled-joshi": {
+                 "min_interval": 1
+             },
+             // https://github.com/azu/textlint-rule-sentence-length
+             // 一文の最大の長さ
+             "sentence-length": {
+                 "max": 150
+             },
+             // https://github.com/textlint-ja/textlint-rule-no-dropping-the-ra
+             // ら抜き言葉を使用しない
+             "no-dropping-the-ra": true,
+             // https://github.com/azu/textlint-rule-no-mix-dearu-desumasu
+             // 文の敬体(ですます調)、常体(である調)のチェック
+             "no-mix-dearu-desumasu": false,
+             // https://github.com/azu/textlint-rule-no-nfd
+             // ホ゜ケット エンシ゛ン
+             // のような、Mac OS XでPDFやFinderからのコピペで発生する濁点のチェック
+             "no-nfd": true,
+             // https://github.com/textlint-rule/textlint-rule-no-invalid-control-character
+             // 制御文字の検出
+             "no-invalid-control-character": true
+        },
+        //true,
+    "textlint-rule-preset-ja-engineering-paper":true,
+    "preset-ja-spacing": {
+         "ja-nakaguro-or-halfwidth-space-between-katakana": true,
+         "ja-no-space-around-parentheses": true,
+         "ja-no-space-between-full-width": true,
+         "ja-space-between-half-and-full-width": {
+             "space": "never"
+         },
+         "ja-space-after-exclamation": false,
+         "ja-space-after-question": false,
+         "ja-space-around-code": false,
+    },
+    "preset-ja-technical-writing": {
+          "ja-no-mixed-period":false,
+          "no-exclamation-question-mark": false
+    },
+    "no-exclamation-question-mark": {
+    // allow to use !
+    "allowHalfWidthExclamation": true,
+    // allow to use ！
+    "allowFullWidthExclamation": true,
+    // allow to use ?
+    "allowHalfWidthQuestion": true,
+    // allow to use ？
+    "allowFullWidthQuestion": true
+    },
+    "no-mix-dearu-desumasu": {
+    "preferInHeader": "",
+    "preferInBody": "である",
+    "preferInList": "である",
+    "strict": true
+    },
+    "no-hankaku-kana": true,
+    "ja-no-abusage": true,
+    "spellcheck-tech-word": true,
+    "prh": {
+      "rulePaths": [
+        "./data/dictionary/master.yml"
+      ]
+    },
+    "preset-ja-technical-writing": {
+      "sentence-length": {
+        max: 150
+      },
+      "max-comma": {
+        max: 3
+      },
+      "max-ten": {
+        "max": 4
+      },
+      "max-kanji-continuous-len": {
+        max: 10
+      },
+      //"arabic-kanji-numbers": true,
+      "no-mix-dearu-desumasu": {
+        "preferInHeader": "",
+        "preferInBody": "である",
+        "preferInList": "である",
+        "strict": true
+      },
+      "no-double-negative-ja": true,
+      "no-dropping-the-ra": true,
+      "no-doubled-conjunctive-particle-ga": true,
+      "no-doubled-conjunction": true,
+      "no-doubled-joshi": {
+        "min_interval": 1
+      },
+      "no-nfd": true,
+      "no-invalid-control-character": false,
+      "no-exclamation-question-mark": true,
+      "no-hankaku-kana": true,
+      "ja-no-weak-phrase": true,
+      "ja-no-successive-word": true,
+      "ja-no-mixed-period": false,
+      "ja-no-abusage": true,
+      "ja-no-redundant-expression": true,
+      "ja-unnatural-alphabet": true,
+      "no-unmatched-pair": true
+    }
+  },
+  "plugins": ["latex2e"]
+}
