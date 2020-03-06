@@ -1,8 +1,4 @@
 *.png binary
 *.pdf binary
-src/fig/* merge=ours
-src/md/*.md merge=ours
-src/md/*.bib merge=ours
-src/eq/*.tex merge=ours
+.gitattributes merge=ours
 dest/* merge=ours
-data/* merge=ours
