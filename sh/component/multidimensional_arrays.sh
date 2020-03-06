@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+ORI_IFS=${IFS} 
+
 # 状態変数を定義する関数 
 function def_state() { 
   # 引数は二つでもいい 
