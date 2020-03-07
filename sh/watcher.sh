@@ -27,7 +27,6 @@ while true; do
         no=$(( no + 1 )) 
         buffer=$(xor_buffer) 
       else 
-        no=1 
         initial_hash $(xor_buffer) ${buffer} 
       fi 
       break 1 
