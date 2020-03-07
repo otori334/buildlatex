@@ -10,7 +10,10 @@ readonly no=${no:-1}
 readonly id=$(date '+%d%H%M%S')$((RANDOM%+101)) 
 export BRANCH_DIR="/tmp/buildlatex_${CURRENT_BRANCH}" 
 export BUILD_DIR="/${BRANCH_DIR}/${TARGET_DIRNAME}_${id}" 
-cp -R ${BRANCH_DIR}/cache ${BUILD_DIR} || mkdir -p ${BUILD_DIR} 
+cp -R ${BRANCH_DIR}/cache ${BUILD_DIR} || { 
+  echo "mkdir BUILD_DIR" 
+  mkdir -p ${BUILD_DIR} 
+} 
 trap 'rm -rf ${BUILD_DIR}' 1 2 3 15 
 cp -R ${PROJECT_DIR}/src ${BUILD_DIR}/ 
 
@@ -20,9 +23,14 @@ shopt -s dotglob
 # これはディレクトリを再帰的に溶かす危険な関数．取り扱い注意 
 deploy_file ${BUILD_DIR}/src 
 # 中間生成ファイルを保存する 
-cp -R automatic_generated.* ../cache/ || {mkdir -p ${BRANCH_DIR}/cache; cp -R automatic_generated.* ../cache/} 
+cp -R automatic_generated.* ../cache/ || { 
+  echo "mkdir cache" 
+  mkdir -p ${BRANCH_DIR}/cache 
+  cp -R automatic_generated.* ../cache/ 
+} 
 rm -rf ${BUILD_DIR} 
 if [ ${no} -eq 1 ]; then 
+  echo "open Skim" 
   open -a Skim ${PROJECT_DIR}/dest/output.pdf 
 fi 
 osascript -e 'display notification "processing md->pdf" with title "exit"' 
