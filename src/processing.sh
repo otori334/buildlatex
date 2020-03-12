@@ -25,7 +25,6 @@ sed -i -e 's/begin{figure}/begin{figure}[htb]/g' automatic_generated.tex
 find . -name "*.tex-e" -exec rm {} \; 
 
 
-cp ./automatic_generated.tex "${PROJECT_DIR}/dest/contents.tex"
+cp ./automatic_generated.tex "${PROJECT_DIR}/dest/contents.tex" 
 
-latexmk
-mv ${BUILD_DIR}/automatic_generated.pdf ${PROJECT_DIR}/dest/output.pdf 
+latexmk 
