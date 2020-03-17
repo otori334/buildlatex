@@ -13,8 +13,7 @@ readonly ID=$(date '+%d%H%M%S')$((RANDOM%+101))
 readonly BRANCH_DIR="/tmp/buildlatex_${CURRENT_BRANCH}" 
 readonly BUILD_DIR="${BRANCH_DIR}/${TARGET_DIRNAME}_${ID}" 
 . ${PROJECT_DIR}/sh/component/functions.sh 
-trap 'rm -rf ${BUILD_DIR}' 1 2 3 15 
-mkdir -p ${BUILD_DIR} 
+trap 'rm -rf ${BUILD_DIR}' 1 2 3 15 && mkdir -p ${BUILD_DIR} 
 cp -R ${PROJECT_DIR}/src ${BUILD_DIR}/ 
 cp -R ${BRANCH_DIR}/cache/* ${BUILD_DIR}/src/ || { 
   echo "mkdir cache" 
