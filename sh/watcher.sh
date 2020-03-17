@@ -21,10 +21,10 @@ while true; do
   index=0 
   for filename in *; do 
     eval ${buffer}[${index}]="$(update_hash ${filename})" 
-    if [ "${A[${index}]})" != "${B[${index}]})" ]; then 
+    if [ "${A[${index}]}" != "${B[${index}]}" ]; then 
       if [ ${number_of_files} -eq $(ls -U1 | wc -l) ]; then 
         ${PROJECT_DIR}/sh/build.sh & 
-        no=$(( no + 1 )) 
+        (( no ++ )) 
         buffer=$(xor_buffer) 
       else 
         initial_hash $(xor_buffer) ${buffer} 
