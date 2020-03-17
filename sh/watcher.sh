@@ -4,34 +4,49 @@ set -u
 # 監視間隔を秒で指定 
 readonly INTERVAL=1 
 readonly PROJECT_DIR=$(cd $(dirname $0); cd ../; pwd) 
-. ${PROJECT_DIR}/sh/component/functions.sh 
-if [ $# -gt 1 ]; then 
-  echo "src直下のディレクトリをひとつ監視します．" 
-  exit 1 
-fi 
 export TARGET_DIRNAME=${1:-md} 
-cd ${PROJECT_DIR}/src/${TARGET_DIRNAME} || exit 1 
 export no=1 
-export filename=0 
-# ファイル数を記録 
-number_of_files=$(ls -U1 | wc -l) 
-buffer="A" 
-initial_hash $(xor_buffer) ${buffer} 
+
+# ハッシュ値を更新する関数 
+function update() { 
+  # Thanks to https://qiita.com/tamanobi/items/74b62e25506af394eae5 
+  echo $(openssl sha256 -r $1 | awk '{print $1}') 
+} 
+
+# 初期化する関数 
+function setup() { 
+  cd ${PROJECT_DIR}/src/${TARGET_DIRNAME} || exit 1 
+  # ハッシュ値を入れる配列 buffer を初期化 
+  unset buffer 
+  local _index=0 
+  for _filename in *; do 
+    buffer[${_index}]=$(update ${_filename}) 
+    (( _index ++ )) 
+  done 
+  # ファイル数を記録 
+  number_of_files=${_index} 
+} 
+
+setup 
+
+# 監視 
 while true; do 
+  sleep ${INTERVAL} 
   index=0 
   for filename in *; do 
-    eval ${buffer}[${index}]="$(update_hash ${filename})" 
-    if [ "${A[${index}]}" != "${B[${index}]}" ]; then 
-      if [ ${number_of_files} -eq $(ls -U1 | wc -l) ]; then 
-        ${PROJECT_DIR}/sh/build.sh & 
-        (( no ++ )) 
-        buffer=$(xor_buffer) 
+    if [ ${buffer[${index}]} != $(update ${filename}) ]; then 
+      if [ ${number_of_files} -ne $(ls -U1 | wc -l) ]; then 
+        # ファイル数が一致しない場合は初期化 
+        setup 
       else 
-        initial_hash $(xor_buffer) ${buffer} 
+        # コンパイルを実行 
+        ${PROJECT_DIR}/sh/build.sh & 
+        buffer[${index}]=$(update ${filename}) 
+        (( no ++ )) 
       fi 
+      # for を抜けて監視ループの最初に戻る 
       break 1 
     fi 
     (( index ++ )) 
   done 
-  sleep INTERVAL 
 done 
