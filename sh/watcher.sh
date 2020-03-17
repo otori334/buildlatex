@@ -31,7 +31,7 @@ while true; do
       fi 
       break 1 
     fi 
-    index=$(( index + 1 )) 
+    (( index ++ )) 
   done 
   sleep INTERVAL 
 done 
