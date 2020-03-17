@@ -33,5 +33,5 @@ while true; do
     fi 
     (( index ++ )) 
   done 
-  sleep INTERVAL 
+  sleep ${INTERVAL} 
 done 
