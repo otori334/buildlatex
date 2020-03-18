@@ -4,6 +4,7 @@
     "comments": true,
       "whitelist": {
         "allow": [
+          "QueryTables",
           "%",
           "\,",
           "(NH3)",
@@ -117,7 +118,7 @@
     "spellcheck-tech-word": true,
     "prh": {
       "rulePaths": [
-        "./data/dictionary/master.yml"
+        "./dictionary/master.yml"
       ]
     },
     "preset-ja-technical-writing": {
