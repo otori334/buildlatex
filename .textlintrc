@@ -118,7 +118,7 @@
     "spellcheck-tech-word": true,
     "prh": {
       "rulePaths": [
-        "./dictionary/master.yml"
+        "./dict/master.yml"
       ]
     },
     "preset-ja-technical-writing": {
