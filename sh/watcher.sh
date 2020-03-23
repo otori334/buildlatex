@@ -10,7 +10,7 @@ export no=1
 # ハッシュ値を更新する関数 
 function update() { 
   # Thanks to https://qiita.com/tamanobi/items/74b62e25506af394eae5 
-  echo $(openssl sha256 -r $1 | awk '{print $1}') 
+  echo $(openssl sha256 -r $1) 
 } 
 
 # 初期化する関数 
@@ -34,14 +34,17 @@ while true; do
   sleep ${INTERVAL} 
   index=0 
   for filename in *; do 
-    if [ ${buffer[${index}]} != $(update ${filename}) ]; then 
-      if [ ${number_of_files} -ne $(ls -U1 | wc -l) ]; then 
-        # ファイル数が一致しない場合は初期化 
+    if [ "${buffer[${index}]}" != "$(update ${filename})" ]; then 
+      whole="$(update ${filename})" 
+      part=( $(echo ${whole}) ) 
+      echo ${part[@]}
+      if [ ${number_of_files} -ne $(ls -U1 | wc -l) -o "${part[1]}" != "${filename}" ]; then 
+        # ファイル数・ファイル名が一致しない場合は初期化 
         setup 
       else 
         # コンパイルを実行 
         ${PROJECT_DIR}/sh/build.sh & 
-        buffer[${index}]=$(update ${filename}) 
+        buffer[${index}]=${whole} 
         (( no ++ )) 
       fi 
       # for を抜けて監視ループの最初に戻る 

@@ -50,4 +50,4 @@ if [ ${NO} -eq 1 ]; then
   echo "open Skim" 
   open -a Skim ${PROJECT_DIR}/dest/output.pdf 
 fi 
-osascript -e 'display notification "processing md->pdf" with title "exit"' 
+# osascript -e 'display notification "processing md->pdf" with title "exit"' 
