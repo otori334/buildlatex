@@ -1,34 +1,37 @@
-# buildlatex
+# これは何 
 
-ラッピングして使ってきた組版のいろいろを整理
+ラッピングして使ってきた組版のいろいろを整理 
 
-## build
+## build 
 
 Markdown -> LaTeX -> pdf をやる
 
-```bash
+```
 $ ./sh/build.sh 
 ```
+
+Pandoc の解釈を通すとエラーが減る 
 
 ## watcher
 
 ファイル変更の保存をトリガーに build.sh を実行する監視スクリプト
 
-```bash
+```
 $ ./sh/watcher.sh eq 
 ```
 
-- 第一引数で監視対象を指定
-- src 直下から選ぶ（ デフォルトは md ）
+- 第一引数 : src 直下から監視対象を指定（デフォルトは md ）
+- エラー通知が出るまでターミナルアプリを見なくて済む 
+- 変更を保存するたびにコンパイルするからエラー箇所を見つけやすい 
 
-## 思い出しポイント
+## TODO
 
 - [ ] Docker 
   - [ ] [まだまだ Word で消耗してるの？ 大学のレポートを Markdown で書こう（Docker 編）](https://qiita.com/Kumassy/items/ffa752da5f7193c4929c) 
 - [ ] make 
   - [ ] [Pandocを使ってMarkdownからLatexによるPDF生成をする](https://qiita.com/kzmssk/items/9607454705b91916f0ff) 
   - [ ] [卒論のtexをmarkdownで書いた話](http://mbuchi.hateblo.jp/entry/2015/03/18/105743) 
-  - [ ] processing を ディレクトリ名に応じた make に置き換える
+  - [ ] processing をディレクトリ名に応じた make に置き換える
 - [ ] 置換 
   - [ ] Pandoc フィルタ 
   - [ ] [ruby](https://qiita.com/ish_774/items/82cbda064792306a5493) 
@@ -37,6 +40,7 @@ $ ./sh/watcher.sh eq
   - [ ] [latexdiff](http://abenori.blogspot.com/2016/06/latexdiff.html) 
   - [ ] [git difftool](https://git-scm.com/docs/git-difftool) 
 - [x] ~~章立てをディレクトリで分けて管理~~ prefixで管理するのが現実的
+  - [ ] watcher.sh と build.sh を統合 
 
 <!--
 - [x] 勝手に同期されるフォルダの中でブランチ切り替えるとよくないことが起こる 

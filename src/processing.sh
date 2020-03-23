@@ -27,4 +27,4 @@ find . -name "*.tex-e" -exec rm {} \;
 
 cp ./automatic_generated.tex "${PROJECT_DIR}/dest/contents.tex" 
 
-latexmk 
+latexmk || osascript -e 'display notification "failure" with title "error"' 
