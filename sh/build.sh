@@ -46,7 +46,7 @@ mv ${BUILD_DIR}/automatic_generated.pdf ${PROJECT_DIR}/dest/output.pdf
 # 中間生成ファイルを保存する 
 cp -R automatic_generated.* ../cache/ 
 rm -rf ${BUILD_DIR} 
-if [ ${NO} -eq 1 ]; then 
+if [ ${NO} -eq 0 ]; then 
   echo "open Skim" 
   open -a Skim ${PROJECT_DIR}/dest/output.pdf 
 fi 
