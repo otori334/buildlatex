@@ -1,48 +1,52 @@
 # これは何 
 
-ラッピングして使ってきた組版のいろいろを整理 
+- プログラムのビルド作業を自動化するツール 
+- Markdown -> LaTeX -> pdf をやるサンプルコード付き 
+- 
 
-## build 
+## 特徴 
 
-Markdown -> LaTeX -> pdf をやる
+- ファイル変更の保存をトリガに自動でコンパイルを実行する 
+- 変更があったディレクトリを起点に，上位のディレクトリに向かって再起的にコンパイルする 
+- 依存関係をディレクトリ構成で表現する 
+- 依存関係を簡単に記述できる 
+- プロジェクトディレクトリが中間生成ファイルまみれになるのを防ぐ 
+- 中間生成ファイルをキャッシュして高速化する 
+- 依存関係がない処理を並列実行して高速化する 
+- 実行する処理はディレクトリ名・深さから指定する 
 
 ```
-$ ./sh/build.sh 
+$ ./sh/watcher.sh 
 ```
 
-Pandoc の解釈を通すとエラーが減る 
+## 組版ツールとしての特徴 
 
-## watcher
+- LaTeX のデバッグをせずに済む 
+  - LaTeX のひどいエラーメッセージを読まずに済む 
+  - Pandoc の解釈を通してエラーを減らす 
+  - 変更を保存するたびにエラーチェックが通る 
+  - エラーが通知されるまでターミナルアプリを見なくて済む 
 
-ファイル変更の保存をトリガーに build.sh を実行する監視スクリプト
+## TODO 
 
-```
-$ ./sh/watcher.sh eq 
-```
+- [ ] [Docker](https://qiita.com/Kumassy/items/ffa752da5f7193c4929c) 
+- [ ] [差分](http://abenori.blogspot.com/2016/06/latexdiff.html) 
+- [ ] ディレクトリで章立てを管理 
 
-- 第一引数 : src 直下から監視対象を指定（デフォルトは md ）
-- エラー通知が出るまでターミナルアプリを見なくて済む 
-- 変更を保存するたびにコンパイルするからエラー箇所を見つけやすい 
-
-## TODO
-
-- [ ] Docker 
-  - [ ] [まだまだ Word で消耗してるの？ 大学のレポートを Markdown で書こう（Docker 編）](https://qiita.com/Kumassy/items/ffa752da5f7193c4929c) 
+<!--
 - [ ] make 
   - [ ] [Pandocを使ってMarkdownからLatexによるPDF生成をする](https://qiita.com/kzmssk/items/9607454705b91916f0ff) 
   - [ ] [卒論のtexをmarkdownで書いた話](http://mbuchi.hateblo.jp/entry/2015/03/18/105743) 
-  - [ ] processing をディレクトリ名に応じた make に置き換える
+  - [ ] ~~processing をディレクトリ名に応じた make に置き換える~~ 
+  - [ ] processing をディレクトリ名に応じた make に置き換える 
 - [ ] 置換 
   - [ ] Pandoc フィルタ 
   - [ ] [ruby](https://qiita.com/ish_774/items/82cbda064792306a5493) 
-  - [x] シェル 
-- [ ] 差分 
-  - [ ] [latexdiff](http://abenori.blogspot.com/2016/06/latexdiff.html) 
-  - [ ] [git difftool](https://git-scm.com/docs/git-difftool) 
-- [x] ~~章立てをディレクトリで分けて管理~~ prefixで管理するのが現実的
-  - [ ] watcher.sh と build.sh を統合 
-
-<!--
+  - [x] sed  
+    - [x] Pandoc フィルタを使った方がスマートだけど sed が十分機能してる 
+- [ ] [git difftool](https://git-scm.com/docs/git-difftool) 
+- [x] prefixで管理する 
+- [x] watcher.sh と build.sh を統合 
 - [x] 勝手に同期されるフォルダの中でブランチ切り替えるとよくないことが起こる 
 -->
 
