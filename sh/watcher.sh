@@ -79,9 +79,6 @@ function build() {
   exit 
 } 
 
-# カレントディレクトリ保護のため移動 
-cd "${BRANCH_DIR}" || exit 1 
-
 function processing() { 
   eval path='${path_'$1'['$2']:-/ERROR_PROCESSING}' 
   eval key='${key_'$1'['$2']}' 
