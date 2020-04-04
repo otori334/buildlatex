@@ -170,9 +170,12 @@ while true; do
   sleep ${INTERVAL} 
   setup 
   watch "${PROJECT_DIR}/src" 
-  if [ ${max_dir_index:=${dir_index}} -ne ${dir_index} ]; then 
+  if [ ${dir_index} -ne ${max_dir_index:=${dir_index}} ]; then 
     max_dir_index=${dir_index} 
     unset buffer 
+    for ((depth=${max_depth}; depth>0; depth--)); do 
+      unset path_${depth} key_${depth} 
+    done 
     build_flag=0 
   fi 
 done 
