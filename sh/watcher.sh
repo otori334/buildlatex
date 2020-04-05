@@ -16,7 +16,13 @@ function setup() {
   max_depth=0 
   depth=0 
 } 
- 
+
+function unset_depth() { 
+  for ((depth=${max_depth}; depth>0; depth--)); do 
+    unset path_${depth} key_${depth} 
+  done 
+} 
+
 function glance() { 
   cd "$1" 
   if [ $((++depth)) -gt ${max_depth} ]; then 
@@ -75,7 +81,7 @@ function build() {
     open -a Skim "${PROJECT_DIR}/dest/output.pdf" 
   fi 
   # osascript -e 'display notification "processing md->pdf" with title "exit"' 
-  echo "finish No.${no}" 
+  echo "Run number ${no} finished" 
   exit 
 } 
 
@@ -145,7 +151,11 @@ function processing() {
     * ) 
       case "$1" in 
         1 ) 
-          latexmk || osascript -e 'display notification "failure" with title "error"' 
+          rm -f automatic_generated.pdf 
+          latexmk || { 
+            echo "error state $?" 
+            osascript -e 'display notification "failure" with title "error"' 
+          } 
           cp automatic_generated.pdf "${PROJECT_DIR}/dest/output.pdf" 2> /dev/null 
           exit ;; 
         * ) 
@@ -163,9 +173,7 @@ while true; do
   if [ ${build_flag} -ne 0 ]; then 
     build & 
     ((no++)) 
-    for ((depth=${max_depth}; depth>0; depth--)); do 
-      unset path_${depth} key_${depth} 
-    done 
+    unset_depth 
   fi 
   sleep ${INTERVAL} 
   setup 
@@ -173,9 +181,7 @@ while true; do
   if [ ${dir_index} -ne ${max_dir_index:=${dir_index}} ]; then 
     max_dir_index=${dir_index} 
     unset buffer 
-    for ((depth=${max_depth}; depth>0; depth--)); do 
-      unset path_${depth} key_${depth} 
-    done 
+    unset_depth 
     build_flag=0 
   fi 
 done 
