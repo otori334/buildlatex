@@ -1,10 +1,10 @@
 # これは何 
 
-- プログラムのビルド作業を自動化するツール 
+- ディレクトリ単位のビルド作業を自動化するツール 
 - Markdown -> LaTeX -> pdf をやるサンプルコード付き 
 
 ```
-$ ./sh/watcher.sh 
+$ ./watcher.sh 
 ```
 
 ## ビルドツールとしての特徴 
@@ -27,7 +27,7 @@ $ ./sh/watcher.sh
 
 ## 組版の参考 
 
-- LaTeX
+- LaTeX 
   - [ぼくのそつろんしっぴつかんきょう](http://mtjune.hateblo.jp/entry/2015/12/10/144657) 
   - [卒論をLaTeXで書くためのエッセンス](https://github.com/tinoji/sotsuron_wo_LaTeX_de) 
   - [アカデミックヤクザにキレられないためのLaTeX論文執筆メソッド](https://qiita.com/suigin/items/10960e516f2d44f6b6de) 
@@ -42,6 +42,7 @@ $ ./sh/watcher.sh
   - [Atomでの論文執筆環境を整える](https://tomochemist.com/2019/02/11/post-264/) 
   - [これに勝てるLaTeXエディタを俺は知らない](https://mobile.twitter.com/5ebec/status/1065872335108956161)
   - [textlintで文章をチェックしよう！](https://www.to-r.net/media/textlint/) 
+  - [github.com/prh/rules](https://github.com/prh/rules/tree/master/media) 
 
 ## TODO 
 
