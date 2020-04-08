@@ -9,10 +9,10 @@ readonly TARGET_DIRNAME="${1:-src}"
 readonly BRANCH_DIR="/tmp/${PROJECT_DIRNAME}_${CURRENT_BRANCH}_${TARGET_DIRNAME}" 
 readonly CACHE_DIR="${BRANCH_DIR}/cache" 
 IFS=$'\n' 
-no=0 
+no=1 
 cd "${PROJECT_DIR}/${TARGET_DIRNAME}" || exit 1 
 trap 'echo "end watcher.sh" && rm -rf "${BUILD_DIR}" && exit' 0 1 2 3 15 
-. "${PROJECT_DIR}/processing.sh" 
+. "${PROJECT_DIR}/processing.sh" || exit 1 
 
 function setup () { 
     build_flag=0 
@@ -90,7 +90,8 @@ function build () {
 } 
 
 setup 
-glance "${PROJECT_DIR}/${TARGET_DIRNAME}" 
+cd "${PROJECT_DIR}" 
+glance "${TARGET_DIRNAME}" 
 build_flag=1 
 
 while true; do 
@@ -101,7 +102,7 @@ while true; do
     fi 
     sleep ${INTERVAL} 
     setup 
-    watch "${PROJECT_DIR}/${TARGET_DIRNAME}" 
+    watch "${TARGET_DIRNAME}" 
     if [ ${dir_index} -ne ${max_dir_index:=${dir_index}} ]; then 
         max_dir_index=${dir_index} 
         unset buffer 
