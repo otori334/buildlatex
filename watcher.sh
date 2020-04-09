@@ -79,11 +79,6 @@ function build () {
     done 
     rm -rf "${CACHE_DIR}" 
     mv "${BUILD_DIR}" "${CACHE_DIR}/" 
-    if [ ${no} -eq 1 ]; then 
-        echo "open Skim" 
-        open -a Skim "${PROJECT_DIR}/dest/output.pdf" 
-    fi 
-    # osascript -e 'display notification "processing md->pdf" with title "exit"' 
     echo "Run number ${no} finished" 
     exit 
 } 
