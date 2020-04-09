@@ -50,8 +50,7 @@ function watch () {
     for _sub_dirname in $(ls -Ap | grep /$); do 
         watch "${_sub_dirname}" 
     done 
-    local _list_file="$(ls -Ap | grep -v /$ 2> /dev/null)" 
-    local _hash="$(shasum -a 256 ${_list_file:-./} 2> /dev/null | shasum -a 256)" 
+    local _hash="$(ls -l | shasum -a 256)" 
     ((dir_index++)) 
     if [ "${_hash}" != "${buffer[${dir_index}]:=${_hash}}" ]; then 
         buffer[${dir_index}]="${_hash}" 
