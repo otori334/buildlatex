@@ -1,12 +1,13 @@
 # これは何 
 
-- ディレクトリ単位のビルド作業を自動化するツール 
+- ディレクトリ単位のビルド作業を自動化するシェルスクリプト 
 - Markdown -> LaTeX -> pdf をやるサンプルコード付き 
-
 ```
-$ ./watcher.sh "ディレクトリ名" 
-```
-第一引数でプロジェクトディレクトリ直下からビルド対象のディレクトリを指定する（指定しない場合，デフォルト値はsrc）
+$ ./watcher.sh "ビルド対象のディレクトリ名" 
+$ ./watcher.sh src 
+``` 
+- 引数を略すと src が対象になる 
+- 具体的なビルド内容は ./processing.sh に記述 
 
 ## ビルドツールとしての特徴 
 
@@ -47,12 +48,22 @@ $ ./watcher.sh "ディレクトリ名"
 
 ## TODO 
 
-- [ ] [Docker](https://qiita.com/Kumassy/items/ffa752da5f7193c4929c) 
 - [ ] [差分](http://abenori.blogspot.com/2016/06/latexdiff.html) 
-- [ ] [ディレクトリで章立てを管理](https://qiita.com/sankichi92/items/1e113fcf6cc045eb64f7) 
-- [ ] [ディレクトリで章立てを管理](https://qiita.com/sakas1231/items/14c96f99d7507b928938) 
 
 <!--
+
+- [ ] [Docker](https://qiita.com/Kumassy/items/ffa752da5f7193c4929c) 
+  - [x] ls の OS 間の引数・出力体系の差異は，出力を丸ごとハッシュ化して解決した 
+  - [x] ただのシェルスクリプトだし Docker をやっていくほどではない
+  - [ ] 本当に必要なのは環境を整える手順書
+    - [ ] リポジトリの目的が組版からビルドツールに移ったから LaTeX などの環境構築は各自で
+
+- [x] 章分け
+  - [ ] [ディレクトリで章立てを管理](https://qiita.com/sankichi92/items/1e113fcf6cc045eb64f7) 
+  - [ ] [ディレクトリで章立てを管理](https://qiita.com/sakas1231/items/14c96f99d7507b928938) 
+  - [x] 章ごとに参考文献を示す場合は src で分ける方法で十分で，dest で統合すればいい  
+  - [x] 上のリンクの方法では参考文献・引用がバグるのでファイル形式が pdf の段階で統合する
+
 - ./sh/Shortcuts.alfredworkflow などはおまけだから，自動化ツールとして使うなら不要 
 
 
@@ -61,6 +72,7 @@ $ ./watcher.sh "ディレクトリ名"
   - [ ] [卒論のtexをmarkdownで書いた話](http://mbuchi.hateblo.jp/entry/2015/03/18/105743) 
   - [ ] ~~processing をディレクトリ名に応じた make に置き換える~~ 
   - [ ] processing をディレクトリ名に応じた make に置き換える 
+    - [x] 全部シェルで書いた
 - [ ] 置換 
   - [ ] Pandoc フィルタ 
   - [ ] [ruby](https://qiita.com/ish_774/items/82cbda064792306a5493) 

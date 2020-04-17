@@ -1,12 +1,12 @@
 #!/bin/bash 
 
 function processing () { 
-    eval path='${path_'$1'['$2']:-/ERROR_PROCESSING}' 
-    eval key='${key_'$1'['$2']}' 
+    eval path='${path_'${depth}'['${index}']:-/ERROR_PROCESSING}' 
+    key="$(echo "${path}" | sed -e 's/.*\/\([^\/]*\)$/\1/')" 
     # 危ない-> "rm -f *.tex ../*.tex" カレントディレクトリで実行しないように注意 
     cd "${BUILD_DIR:-/ERROR_PROCESSING}${path#${PROJECT_DIR}}" || exit 1 
     case "${key}" in 
-        "eq/") 
+        "eq") 
             mv "../automatic_generated.tex" "../automatic_generated.tex-bak" 2> /dev/null 
             rm -f *.tex ../*.tex 
             mv "../automatic_generated.tex-bak" "../automatic_generated.tex" 2> /dev/null 
@@ -18,12 +18,12 @@ function processing () {
             cp *.tex ../ # 2> /dev/null 
             exit 
         ;; 
-        "fig/") 
+        "fig") 
             rm -f ../*.{png,jpg,pdf} 
             cp "${path}/"*.{png,jpg,pdf} ../ 2> /dev/null 
             exit 
         ;; 
-        "md/") 
+        "md") 
             rm -f *.{md,bib} 
             cp "${path}/"*.{md,bib} ./ 2> /dev/null 
             # Thanks to https://yanor.net/wiki/?シェルスクリプト/sedでバックスラッシュを置換する際の注意点 
@@ -60,12 +60,12 @@ function processing () {
             cp automatic_generated.tex ../ 
             exit 
         ;; 
-        "tpl/" ) 
+        "tpl" ) 
             cp "${path}/"{*,.*} ../ 2> /dev/null 
             exit 
         ;; 
         * ) 
-            case "$1" in 
+            case "${depth}" in 
                 1 ) 
                     rm -f automatic_generated.pdf 
                     latexmk || { 
@@ -81,7 +81,7 @@ function processing () {
                     exit 
                 ;; 
                 * ) 
-                    echo "ERROR" 
+                    echo "Nonexistent key ${key}" 
                     exit 
                 ;; 
             esac 
