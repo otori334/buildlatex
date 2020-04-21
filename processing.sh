@@ -1,16 +1,16 @@
 #!/bin/bash 
 
 function processing () { 
-    eval path='${path_'${depth}'['${index}']:-/ERROR_PROCESSING}' 
-    key="$(echo "${path}" | sed -e 's/.*\/\([^\/]*\)$/\1/')" 
+    eval processing_dir='${processing_dir_'${depth}'['${index}']:-/ERROR_PROCESSING}' 
+    processing_dirname="$(echo "${processing_dir}" | sed -e 's/.*\/\([^\/]*\)$/\1/')" 
     # 危ない-> "rm -f *.tex ../*.tex" カレントディレクトリで実行しないように注意 
-    cd "${BUILD_DIR:-/ERROR_PROCESSING}${path#${PROJECT_DIR}}" || exit 1 
-    case "${key}" in 
+    cd "${BUILD_DIR:-/ERROR_PROCESSING}${processing_dir#${PROJECT_DIR}}" || exit 1 
+    case "${processing_dirname}" in 
         "eq") 
             mv "../automatic_generated.tex" "../automatic_generated.tex-bak" 2> /dev/null 
             rm -f *.tex ../*.tex 
             mv "../automatic_generated.tex-bak" "../automatic_generated.tex" 2> /dev/null 
-            cp "${path}/"*.tex ./ # 2> /dev/null 
+            cp "${processing_dir}/"*.tex ./ # 2> /dev/null 
             for _filename in *.tex 
             do 
                 sed -i '' -e "s/\label{}/\label{${_filename%.*}}/g" "${_filename}" 
@@ -20,12 +20,12 @@ function processing () {
         ;; 
         "fig") 
             rm -f ../*.{png,jpg,pdf} 
-            cp "${path}/"*.{png,jpg,pdf} ../ 2> /dev/null 
+            cp "${processing_dir}/"*.{png,jpg,pdf} ../ 2> /dev/null 
             exit 
         ;; 
         "md") 
             rm -f *.{md,bib} 
-            cp "${path}/"*.{md,bib} ./ 2> /dev/null 
+            cp "${processing_dir}/"*.{md,bib} ./ 2> /dev/null 
             # Thanks to https://yanor.net/wiki/?シェルスクリプト/sedでバックスラッシュを置換する際の注意点 
             # LaTeX の強制改行 "\\" を Pandoc が "\" のエスケープと判断するのを防ぐ 
             sed -i '' \
@@ -61,7 +61,7 @@ function processing () {
             exit 
         ;; 
         "tpl" ) 
-            cp "${path}/"{*,.*} ../ 2> /dev/null 
+            cp "${processing_dir}/"{*,.*} ../ 2> /dev/null 
             exit 
         ;; 
         * ) 
@@ -73,7 +73,7 @@ function processing () {
                         osascript -e 'display notification "something went wrong" with title "latexmk"'; 
                     } 
                     cp automatic_generated.pdf "${PROJECT_DIR}/dest/output.pdf" 2> /dev/null 
-                    if [ ${no} -eq 1 ]; then 
+                    if [ ${run_number} -eq 1 ]; then 
                         echo "open Skim" 
                         open -a Skim "${PROJECT_DIR}/dest/output.pdf" 
                     fi 
@@ -81,7 +81,7 @@ function processing () {
                     exit 
                 ;; 
                 * ) 
-                    echo "Nonexistent key ${key}" 
+                    echo "Nonexistent ${processing_dir}" 
                     exit 
                 ;; 
             esac 

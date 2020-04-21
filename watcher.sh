@@ -23,7 +23,7 @@ function setup () {
 
 function unset_depth () { 
     for ((depth=${max_depth}; depth>0; depth--)); do 
-        unset path_${depth} key_${depth} 
+        unset processing_dir_${depth} 
     done 
 } 
 
@@ -32,12 +32,13 @@ function glance () {
     if [ $((++depth)) -gt ${max_depth} ]; then 
         max_depth=${depth} 
     fi 
-    PRE_IFS=${IFS} IFS=$'\n' 
+    local _PRE_IFS=${IFS} 
+    IFS=$'\n' 
     for _sub_dirname in $(ls -Ap | grep /$); do 
         glance "${_sub_dirname}" 
     done 
-    IFS=${PRE_IFS} 
-    eval path_${depth}+='('"$(pwd)"')' 
+    IFS=${_PRE_IFS} 
+    eval processing_dir_${depth}+='('"$(pwd)"')' 
     ((depth--)) 
     cd ../ 
 } 
@@ -48,11 +49,12 @@ function watch () {
         max_depth=${depth} 
     fi 
     local _build_flag=${build_flag} 
-    PRE_IFS=${IFS} IFS=$'\n' 
+    local _PRE_IFS=${IFS} 
+    IFS=$'\n' 
     for _sub_dirname in $(ls -Ap | grep /$); do 
         watch "${_sub_dirname}" 
     done 
-    IFS=${PRE_IFS} 
+    IFS=${_PRE_IFS} 
     local _hash="$(ls -l | shasum -a 256)" 
     ((dir_index++)) 
     if [ "${_hash}" != "${buffer[${dir_index}]:=${_hash}}" ]; then 
@@ -60,7 +62,7 @@ function watch () {
         ((build_flag++)) 
     fi 
     if [ ${_build_flag} -ne ${build_flag} ]; then 
-        eval path_${depth}+='('"$(pwd)"')' 
+        eval processing_dir_${depth}+='('"$(pwd)"')' 
     fi 
     ((depth--)) 
     cd ../ 
@@ -72,7 +74,7 @@ function build () {
     mkdir -p "${BUILD_DIR}" 
     cp -R "${CACHE_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}/" 2> /dev/null || cp -R "${PROJECT_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}/" 
     for ((depth=${max_depth}; depth>0; depth--)); do 
-        local _max_index=$(eval echo '"${#'path_${depth}'[*]}"') 
+        local _max_index=$(eval echo '"${#'processing_dir_${depth}'[*]}"') 
         for ((index=0; index<${_max_index}; index++)); do 
             processing & 
         done 
