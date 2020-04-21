@@ -72,10 +72,10 @@ function processing () {
                         echo "error state $?"; 
                         osascript -e 'display notification "something went wrong" with title "latexmk"'; 
                     } 
-                    cp automatic_generated.pdf "${PROJECT_DIR}/dest/output.pdf" 2> /dev/null 
+                    cp automatic_generated.pdf "${PROJECT_DIR}/dest/${TARGET_DIRNAME}.pdf" 2> /dev/null 
                     if [ ${run_number} -eq 1 ]; then 
                         echo "open Skim" 
-                        open -a Skim "${PROJECT_DIR}/dest/output.pdf" 
+                        open -a Skim "${PROJECT_DIR}/dest/${TARGET_DIRNAME}.pdf" 
                     fi 
                     # osascript -e 'display notification "processing md->pdf" with title "exit"' 
                     exit 
