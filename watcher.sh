@@ -16,13 +16,15 @@ cd "${PROJECT_DIR}/${TARGET_DIRNAME}" || exit 1
 
 if [ ${INTERVAL} -gt 1 ]; then 
     function update () { 
-        # ls はタイムスタンプの粒度が秒だから，1秒以下の変化を捉えるのには役不足 
+        # ls はタイムスタンプの粒度が秒だから，1秒以下の変化を捉えるのには力不足 
+        # 監視対象が膨大な場合は下の方法より速くなる
         ls -l | shasum -a 256 
     } 
 else 
     function update () { 
         local _list_file="$(ls -Ap | grep -v /$ 2> /dev/null)" 
-        # ファイル数が多いほど遅くなる気がする．遅延は通常ミリ秒オーダーだから基本気にしなくてよい 
+        # ファイル数が多いほど遅延が大きくなる
+        # 通常，遅延はミリ秒オーダーだから気にしなくてよい 
         shasum -a 256 ${_list_file:-./} 2> /dev/null | shasum -a 256 
     } 
 fi 
