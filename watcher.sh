@@ -14,6 +14,19 @@ trap 'echo "end watcher.sh" && rm -rf "${BUILD_DIR}" && exit' 0 1 2 3 15
 cd "${PROJECT_DIR}/${TARGET_DIRNAME}" || exit 1 
 . "${PROJECT_DIR}/processing.sh" || exit 1 
 
+if [ ${INTERVAL} -gt 1 ]; then 
+    function update () { 
+        # ls はタイムスタンプの粒度が秒だから，1秒以下の変化を捉えるのには役不足 
+        ls -l | shasum -a 256 
+    } 
+else 
+    function update () { 
+        local _list_file="$(ls -Ap | grep -v /$ 2> /dev/null)" 
+        # ファイル数が多いほど遅くなる気がする．遅延は通常ミリ秒オーダーだから基本気にしなくてよい 
+        shasum -a 256 ${_list_file:-./} 2> /dev/null | shasum -a 256 
+    } 
+fi 
+
 function setup () { 
     build_flag=0 
     dir_index=0 
@@ -55,7 +68,7 @@ function watch () {
         watch "${_sub_dirname}" 
     done 
     IFS=${_PRE_IFS} 
-    local _hash="$(ls -l | shasum -a 256)" 
+    local _hash="$(update)" 
     ((dir_index++)) 
     if [ "${_hash}" != "${buffer[${dir_index}]:=${_hash}}" ]; then 
         buffer[${dir_index}]="${_hash}" 
