@@ -69,8 +69,8 @@ function watch () {
     for _sub_dirname in $(ls -Ap | grep /$); do 
         watch "${_sub_dirname}" 
     done 
-    IFS=${_PRE_IFS} 
     local _hash="$(update)" 
+    IFS=${_PRE_IFS} 
     ((dir_index++)) 
     if [ "${_hash}" != "${buffer[${dir_index}]:=${_hash}}" ]; then 
         buffer[${dir_index}]="${_hash}" 
