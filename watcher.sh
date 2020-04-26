@@ -4,7 +4,7 @@
 readonly INTERVAL=1 
 readonly TMP_DIR="/tmp" 
 readonly CACHE_DIRNAME="cache" 
-readonly TARGET_DIRNAME="${1:-src}" 
+readonly TARGET_DIRNAME="${@:-src}" 
 readonly PROJECT_DIR="$(cd "$(dirname "$0")"; pwd)" 
 readonly PROJECT_DIRNAME="$(echo "${PROJECT_DIR}" | sed -e 's/.*\/\([^\/]*\)$/\1/')" 
 readonly GIT_BRANCHNAME="$(cd "${PROJECT_DIR}"; git rev-parse --abbrev-ref HEAD)" 
