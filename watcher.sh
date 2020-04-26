@@ -14,16 +14,28 @@ trap 'echo "end watcher.sh" && rm -rf "${BUILD_DIR}" && exit' 0 1 2 3 15
 cd "${PROJECT_DIR}/${TARGET_DIRNAME}" || exit 1 
 . "${PROJECT_DIR}/processing.sh" || exit 1 
 
+function input_array2 () { 
+    eval array2_$1[$2]='"'$3'"' 
+} 
+
+function output_array2 () { 
+    eval echo '${array2_'$1'['$2']}' 
+} 
+
+function max_array2 () { 
+    eval echo '"${#'array2_$1'[*]}"' 
+} 
+
 if [ ${INTERVAL} -gt 1 ]; then 
     function update () { 
         # ls はタイムスタンプの粒度が秒だから，1秒以下の変化を捉えるのには力不足 
-        # 監視対象が膨大な場合は下の方法より速くなる
+        # 監視対象が膨大な場合に有効 
         ls -l | shasum -a 256 
     } 
 else 
     function update () { 
         local _list_file="$(ls -Ap | grep -v /$ 2> /dev/null)" 
-        # ファイル数が多いほど遅延が大きくなる
+        # ファイル数が多いほど遅延が大きくなる 
         # 通常，遅延はミリ秒オーダーだから気にしなくてよい 
         shasum -a 256 ${_list_file:-./} 2> /dev/null | shasum -a 256 
     } 
@@ -38,7 +50,7 @@ function setup () {
 
 function unset_depth () { 
     for ((depth=${max_depth}; depth>0; depth--)); do 
-        unset processing_dir_${depth} 
+        unset array2_${depth} 
     done 
 } 
 
@@ -46,6 +58,7 @@ function glance () {
     cd "$1" 
     if [ $((++depth)) -gt ${max_depth} ]; then 
         max_depth=${depth} 
+        input_array2 "index" "${depth}" "0" 
     fi 
     local _PRE_IFS=${IFS} 
     IFS=$'\n' 
@@ -53,7 +66,8 @@ function glance () {
         glance "${_sub_dirname}" 
     done 
     IFS=${_PRE_IFS} 
-    eval processing_dir_${depth}+='('"$(pwd)"')' 
+    input_array2 "${depth}" "$(output_array2 "index" ${depth} )" "$(pwd)" 
+    input_array2 "index" "${depth}" $(($(output_array2 "index" ${depth})+1)) 
     ((depth--)) 
     cd ../ 
 } 
@@ -62,6 +76,7 @@ function watch () {
     cd "$1" 
     if [ $((++depth)) -gt ${max_depth} ]; then 
         max_depth=${depth} 
+        input_array2 "index" "${depth}" "0" 
     fi 
     local _build_flag=${build_flag} 
     local _PRE_IFS=${IFS} 
@@ -77,19 +92,21 @@ function watch () {
         ((build_flag++)) 
     fi 
     if [ ${_build_flag} -ne ${build_flag} ]; then 
-        eval processing_dir_${depth}+='('"$(pwd)"')' 
+        input_array2 "${depth}" "$(output_array2 "index" ${depth} )" "$(pwd)" 
+        input_array2 "index" "${depth}" $(($(output_array2 "index" ${depth})+1)) 
     fi 
     ((depth--)) 
     cd ../ 
 } 
 
 function build () { 
+    . "${PROJECT_DIR}/processing.sh" 
     local _build_pid=$(bash -c 'echo ${PPID}') 
     BUILD_DIR="${BRANCH_DIR}/${_build_pid}" 
     mkdir -p "${BUILD_DIR}" 
     cp -R "${CACHE_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}/" 2> /dev/null || cp -R "${PROJECT_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}/" 
     for ((depth=${max_depth}; depth>0; depth--)); do 
-        local _max_index=$(eval echo '"${#'processing_dir_${depth}'[*]}"') 
+        local _max_index=$(max_array2 ${depth}) 
         for ((index=0; index<${_max_index}; index++)); do 
             processing & 
         done 
@@ -108,7 +125,7 @@ run_number=1
 build_flag=1 
 
 while true; do 
-    if [ ${build_flag} -ne 0 ]; then 
+    if [ 0 -ne ${build_flag:=0} ]; then 
         build & 
         ((run_number++)) 
         unset_depth 

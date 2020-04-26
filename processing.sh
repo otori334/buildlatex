@@ -1,10 +1,13 @@
 #!/bin/bash 
 
 function processing () { 
-    eval processing_dir='${processing_dir_'${depth}'['${index}']:-/ERROR_PROCESSING}' 
+    processing_dir="$(output_array2 ${depth} ${index})" 
     processing_dirname="$(echo "${processing_dir}" | sed -e 's/.*\/\([^\/]*\)$/\1/')" 
     # 危ない-> "rm -f *.tex ../*.tex" カレントディレクトリで実行しないように注意 
-    cd "${BUILD_DIR:-/ERROR_PROCESSING}${processing_dir#${PROJECT_DIR}}" || exit 1 
+    exist_test_dir="${BUILD_DIR}${processing_dir#${PROJECT_DIR}}" 
+    cd "${BUILD_DIR:-/NO_BUILD_DIR}" || exit 1 
+    cd "${exist_test_dir}" 2> /dev/null || cp -R "${processing_dir}" "${exist_test_dir%/*}/" 
+    
     case "${processing_dirname}" in 
         "eq") 
             mv "../automatic_generated.tex" "../automatic_generated.tex-bak" 2> /dev/null 
@@ -56,6 +59,7 @@ function processing () {
             -e 's/includegraphics/includegraphics[width=1.0\\columnwidth]/g' \
             -e 's/begin{figure}/begin{figure}[htb]/g' \
             automatic_generated.tex 
+            # -e 's/\\textbf{/\\textcolor{yellow}{/g' \
             cp automatic_generated.tex "${PROJECT_DIR}/dest/contents.tex" 
             cp automatic_generated.tex ../ 
             exit 
@@ -81,7 +85,7 @@ function processing () {
                     exit 
                 ;; 
                 * ) 
-                    echo "Nonexistent ${processing_dir}" 
+                    echo "Nonexistent processing_dir ${processing_dir}" 
                     exit 
                 ;; 
             esac 

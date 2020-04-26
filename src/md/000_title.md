@@ -17,7 +17,7 @@ keywords:
 draft: \usepackage[draft]{graphicx}% dvipdfmx は自動的に有効になる
 #date: \date{作成開始日：}
 date: \date{提出日：\today}
-#titletableofcontents: \tableofcontents 
+#titletableofcontents: \setcounter{tocdepth}{3}\tableofcontents 
 #titlenewpage: \newpage 
 #titlepagenumber: \thispagestyle{empty} 
 abstractname: \renewcommand{\abstractname}{} 
