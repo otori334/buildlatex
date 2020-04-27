@@ -8,7 +8,7 @@ readonly TARGET_DIRNAME="${@:-src}"
 readonly PROJECT_DIR="$(cd "$(dirname "$0")"; pwd)" 
 readonly PROJECT_DIRNAME="$(echo "${PROJECT_DIR}" | sed -e 's/.*\/\([^\/]*\)$/\1/')" 
 readonly GIT_BRANCHNAME="$(cd "${PROJECT_DIR}"; git rev-parse --abbrev-ref HEAD)" 
-readonly BRANCH_DIR="${TMP_DIR}/${PROJECT_DIRNAME}_${GIT_BRANCHNAME}_${TARGET_DIRNAME}" 
+readonly BRANCH_DIR="${TMP_DIR}/${PROJECT_DIRNAME}_${TARGET_DIRNAME}_${GIT_BRANCHNAME}" 
 readonly CACHE_DIR="${BRANCH_DIR}/${CACHE_DIRNAME}" 
 trap 'echo "end watcher.sh" && rm -rf "${BUILD_DIR}" && exit' 0 1 2 3 15 
 cd "${PROJECT_DIR}/${TARGET_DIRNAME}" || exit 1 
@@ -104,7 +104,7 @@ function build () {
     local _build_pid=$(bash -c 'echo ${PPID}') 
     BUILD_DIR="${BRANCH_DIR}/${_build_pid}" 
     mkdir -p "${BUILD_DIR}" 
-    cp -R "${CACHE_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}/" 2> /dev/null || cp -R "${PROJECT_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}/" 
+    cp -R "${CACHE_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}" 2> /dev/null || cp -R "${PROJECT_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}" 
     for ((depth=${max_depth}; depth>0; depth--)); do 
         local _max_index=$(max_array2 ${depth}) 
         for ((index=0; index<${_max_index}; index++)); do 

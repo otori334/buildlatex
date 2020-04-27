@@ -1,12 +1,14 @@
 #!/bin/bash 
 
 function processing () { 
+    cd "${BUILD_DIR:-/NO_BUILD_DIR}" || exit 1 
+    # 危ない-> "rm -f *.tex ../*.tex" カレントディレクトリで実行しないように注意 
     processing_dir="$(output_array2 ${depth} ${index})" 
     processing_dirname="$(echo "${processing_dir}" | sed -e 's/.*\/\([^\/]*\)$/\1/')" 
-    # 危ない-> "rm -f *.tex ../*.tex" カレントディレクトリで実行しないように注意 
-    exist_test_dir="${BUILD_DIR}${processing_dir#${PROJECT_DIR}}" 
-    cd "${BUILD_DIR:-/NO_BUILD_DIR}" || exit 1 
-    cd "${exist_test_dir}" 2> /dev/null || cp -R "${processing_dir}" "${exist_test_dir%/*}/" 
+    cd "${exist_test_dir:=${processing_dir/${PROJECT_DIR}/${BUILD_DIR}}}" 2> /dev/null || { 
+        cp -R "${processing_dir}" "${exist_test_dir%/*}"; 
+        cd "${exist_test_dir}"; 
+    } 
     
     case "${processing_dirname}" in 
         "eq") 
