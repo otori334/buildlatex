@@ -29,6 +29,10 @@ function max_array2 () {
     eval echo '"${#'array2_$1'[*]}"' 
 } 
 
+function inc_array2 () { 
+    eval echo '$((array2_'$1'['$2']++))' 
+} 
+
 if [ ${INTERVAL} -gt 1 ]; then 
     # ls はタイムスタンプの粒度が秒だから，1秒以下の変化を捉えるのには力不足 
     # 監視対象が膨大な場合に有効 
@@ -74,14 +78,12 @@ function watch () {
         local _hash="$(update)" 
     # IFS=${_PRE_IFS} 
     ((dir_index++)) 
-    if [ "${_hash}" != "${buffer[${dir_index}]}" ] || [ ${run_number} -eq 1 ]; then 
+    if [ "${_hash}" != "${buffer[${dir_index}]}" ] || [ ! "${run_number+set}" ]; then 
         buffer[${dir_index}]="${_hash}" 
         ((build_flag++)) 
     fi 
     if [ ${_build_flag} -ne ${build_flag} ]; then 
-        local _array2_index="$(output_array2 "index" ${depth} )" 
-        input_array2 "${depth}" "${_array2_index}" "$(pwd)" 
-        input_array2 "index" "${depth}" "$((++_array2_index))" 
+        input_array2 "${depth}" "$(inc_array2 "index" "${depth}")" "$(pwd)" 
     fi 
     ((depth--)) 
     cd ../ 
@@ -107,13 +109,11 @@ function build () {
     exit 
 } 
 
-
-PRE_IFS=${IFS}; IFS=$'\n' 
-run_number=1 
+ORI_IFS=${IFS} IFS=$'\n' 
 
 while true; do 
     setup 
-    # PRE_IFS=${IFS}; IFS=$'\n' 
+    # PRE_IFS=${IFS} IFS=$'\n' 
         watch "${PROJECT_DIR}/${TARGET_DIRNAME}" 
     # IFS=${PRE_IFS} 
     if [ ${dir_index} -ne ${max_dir_index:=${dir_index}} ]; then 
@@ -123,8 +123,8 @@ while true; do
         build_flag=0 
     fi 
     if [ 0 -ne ${build_flag:=0} ]; then 
-        build & 
         ((run_number++)) 
+        build & 
         unset_depth 
     fi 
     sleep ${INTERVAL} 
