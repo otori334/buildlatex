@@ -29,10 +29,6 @@ function max_array2 () {
     eval echo '"${#'array2_$1'[*]}"' 
 } 
 
-function inc_array2 () { 
-    eval echo '$((array2_'$1'['$2']++))' 
-} 
-
 if [ ${INTERVAL} -gt 1 ]; then 
     # ls はタイムスタンプの粒度が秒だから，1秒以下の変化を捉えるのには力不足 
     # 監視対象が膨大な場合に有効 
@@ -71,12 +67,14 @@ function watch () {
     done 
     local _hash="$(update)" 
     ((dir_index++)) 
-    if [ "${_hash}" != "${buffer[${dir_index}]}" ] || [ ! "${run_number+set}" ]; then 
+    if [ "${_hash}" != "${buffer[${dir_index}]}" ] || [ ${run_number} -eq 1 ]; then 
         buffer[${dir_index}]="${_hash}" 
         ((build_flag++)) 
     fi 
     if [ ${_build_flag} -ne ${build_flag} ]; then 
-        input_array2 "${depth}" "$(inc_array2 "index" "${depth}")" "$(pwd)" 
+        local _array2_index="$(output_array2 "index" ${depth} )" 
+        input_array2 "${depth}" "${_array2_index}" "$(pwd)" 
+        input_array2 "index" "${depth}" "$((++_array2_index))" 
     fi 
     ((depth--)) 
     cd ../ 
@@ -97,12 +95,14 @@ function build () {
     done 
     rm -rf "${CACHE_DIR}" 
     mv "${BUILD_DIR}" "${CACHE_DIR}/" 
+    echo "${BRANCH_DIR}" 
     echo "Run number ${run_number} finished" 
     exit 
 } 
 
 # 空白を含む名前を扱う 
 ORI_IFS=${IFS} IFS=$'\n' 
+run_number=1 
 
 while true; do 
     setup 
@@ -114,8 +114,8 @@ while true; do
         build_flag=0 
     fi 
     if [ 0 -ne ${build_flag:=0} ]; then 
-        ((run_number++)) 
         build & 
+        ((run_number++)) 
         unset_depth 
     fi 
     sleep ${INTERVAL} 
