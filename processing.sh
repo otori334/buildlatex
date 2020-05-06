@@ -62,7 +62,7 @@ function processing () {
             -e 's/begin{figure}/begin{figure}[htb]/g' \
             automatic_generated.tex 
             # -e 's/\\textbf{/\\textcolor{yellow}{/g' \
-            cp automatic_generated.tex "${PROJECT_DIR}/dest/contents.tex" 
+            cp automatic_generated.tex "${DEST_DIR}/contents.tex" 
             cp automatic_generated.tex ../ 
             exit 
         ;; 
@@ -76,20 +76,21 @@ function processing () {
                 echo "error state $?"; 
                 osascript -e 'display notification "something went wrong" with title "latexmk"'; 
             } 
-            cp automatic_generated.pdf "${PROJECT_DIR}/dest/${TARGET_DIRNAME}.pdf" 2> /dev/null 
+            cp automatic_generated.pdf "${DEST_DIR}/${TARGET_DIRNAME}.pdf" 2> /dev/null 
             if [ ${run_number} -eq 1 ]; then 
                 echo "open Skim" 
-                open -a Skim "${PROJECT_DIR}/dest/${TARGET_DIRNAME}.pdf" 
+                open -a Skim "${DEST_DIR}/${TARGET_DIRNAME}.pdf" 
             fi 
             # osascript -e 'display notification "processing md->pdf" with title "exit"' 
             exit 
         ;; 
         * ) 
-            case "${depth}" in 
-                * ) 
-                    echo "Nonexistent processing_dir ${processing_dir}" 
-                    exit 
-                ;; 
-            esac 
+            echo "Nonexistent processing_dir ${processing_dir}" 
+            exit 
+    esac 
+    case "${depth}" in 
+        * ) 
+            :
+        ;; 
     esac 
 } 
