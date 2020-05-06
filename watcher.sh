@@ -72,9 +72,7 @@ function watch () {
         ((build_flag++)) 
     fi 
     if [ ${_build_flag} -ne ${build_flag} ]; then 
-        local _array2_index="$(output_array2 "index" ${depth} )" 
-        input_array2 "${depth}" "${_array2_index}" "$(pwd)" 
-        input_array2 "index" "${depth}" "$((++_array2_index))" 
+        input_array2 "${depth}" "$((array2_index["${depth}"]++))" "$(pwd)" 
     fi 
     ((depth--)) 
     cd ../ 
