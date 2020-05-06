@@ -37,17 +37,12 @@ if [ ${INTERVAL} -gt 1 ]; then
     # ls はタイムスタンプの粒度が秒だから，1秒以下の変化を捉えるのには力不足 
     # 監視対象が膨大な場合に有効 
     function update () { 
-        # local _PRE_IFS=${IFS}; IFS=$'\n' # 関数外で変更済みのため略 
-            ls -l | shasum -a 256 
-        # IFS=${_PRE_IFS} 
+        ls -l | shasum -a 256 
     } 
 else 
-    # 上の方法より処理が重い 
     function update () { 
-        # local _PRE_IFS=${IFS}; IFS=$'\n' 
-            local _list_file="$(ls -Ap | grep -v /$ 2> /dev/null)" 
-            shasum -a 256 ${_list_file:-./} 2> /dev/null | shasum -a 256 
-        # IFS=${_PRE_IFS} 
+        local _list_file="$(ls -Ap | grep -v /$ 2> /dev/null)" 
+        shasum -a 256 ${_list_file:-./} 2> /dev/null | shasum -a 256 
     } 
 fi 
 
@@ -71,12 +66,10 @@ function watch () {
         input_array2 "index" "${depth}" "0" 
     fi 
     local _build_flag=${build_flag} 
-    # local _PRE_IFS=${IFS}; IFS=$'\n' # 関数の外で変更済みのため略 
-        for _sub_dirname in $(ls -Ap | grep /$); do 
-            watch "${_sub_dirname}" 
-        done 
-        local _hash="$(update)" 
-    # IFS=${_PRE_IFS} 
+    for _sub_dirname in $(ls -Ap | grep /$); do 
+        watch "${_sub_dirname}" 
+    done 
+    local _hash="$(update)" 
     ((dir_index++)) 
     if [ "${_hash}" != "${buffer[${dir_index}]}" ] || [ ! "${run_number+set}" ]; then 
         buffer[${dir_index}]="${_hash}" 
@@ -91,10 +84,9 @@ function watch () {
 
 function build () { 
     . "${PROJECT_DIR}/processing.sh" 
-    local _build_pid=$(bash -c 'echo ${PPID}') 
-    BUILD_DIR="${BRANCH_DIR}/${_build_pid}" 
+    BUILD_DIR="${BRANCH_DIR}/$(bash -c 'echo ${PPID}')" 
     mkdir -p "${BUILD_DIR}" 
-    cp -R "${CACHE_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}" 2> /dev/null || cp -R "${PROJECT_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}" 
+    cp -R "${CACHE_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}" 2> /dev/null || cp -R "${TARGET_DIR}" "${BUILD_DIR}" 
     for ((depth=${max_depth}; depth>0; depth--)); do 
         local _max_index="$(max_array2 ${depth})" 
         for ((index=0; index<${_max_index}; index++)); do 
@@ -109,13 +101,12 @@ function build () {
     exit 
 } 
 
+# 空白を含む名前を扱う 
 ORI_IFS=${IFS} IFS=$'\n' 
 
 while true; do 
     setup 
-    # PRE_IFS=${IFS} IFS=$'\n' 
-        watch "${PROJECT_DIR}/${TARGET_DIRNAME}" 
-    # IFS=${PRE_IFS} 
+    watch "${TARGET_DIR}" 
     if [ ${dir_index} -ne ${max_dir_index:=${dir_index}} ]; then 
         max_dir_index=${dir_index} 
         unset buffer 
