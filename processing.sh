@@ -70,22 +70,22 @@ function processing () {
             cp "${processing_dir}/"{*,.*} ../ 2> /dev/null 
             exit 
         ;; 
+        "${TARGET_DIRNAME}" ) 
+            rm -f automatic_generated.pdf 
+            latexmk || { 
+                echo "error state $?"; 
+                osascript -e 'display notification "something went wrong" with title "latexmk"'; 
+            } 
+            cp automatic_generated.pdf "${PROJECT_DIR}/dest/${TARGET_DIRNAME}.pdf" 2> /dev/null 
+            if [ ${run_number} -eq 1 ]; then 
+                echo "open Skim" 
+                open -a Skim "${PROJECT_DIR}/dest/${TARGET_DIRNAME}.pdf" 
+            fi 
+            # osascript -e 'display notification "processing md->pdf" with title "exit"' 
+            exit 
+        ;; 
         * ) 
             case "${depth}" in 
-                1 ) 
-                    rm -f automatic_generated.pdf 
-                    latexmk || { 
-                        echo "error state $?"; 
-                        osascript -e 'display notification "something went wrong" with title "latexmk"'; 
-                    } 
-                    cp automatic_generated.pdf "${PROJECT_DIR}/dest/${TARGET_DIRNAME}.pdf" 2> /dev/null 
-                    if [ ${run_number} -eq 1 ]; then 
-                        echo "open Skim" 
-                        open -a Skim "${PROJECT_DIR}/dest/${TARGET_DIRNAME}.pdf" 
-                    fi 
-                    # osascript -e 'display notification "processing md->pdf" with title "exit"' 
-                    exit 
-                ;; 
                 * ) 
                     echo "Nonexistent processing_dir ${processing_dir}" 
                     exit 
