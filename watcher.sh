@@ -67,7 +67,7 @@ function watch () {
     done 
     local _hash="$(update)" 
     ((dir_index++)) 
-    if [ "${_hash}" != "${buffer[${dir_index}]}" ] || [ ${run_number} -eq 1 ]; then 
+    if [ "${_hash}" != "${buffer[${dir_index}]:=${_hash}}" -o ! "${run_number+set}" ]; then 
         buffer[${dir_index}]="${_hash}" 
         ((build_flag++)) 
     fi 
@@ -100,7 +100,6 @@ function build () {
 
 # 空白を含む名前を扱う 
 ORI_IFS=${IFS} IFS=$'\n' 
-run_number=1 
 
 while true; do 
     setup 
@@ -112,8 +111,8 @@ while true; do
         build_flag=0 
     fi 
     if [ 0 -ne ${build_flag:=0} ]; then 
-        build & 
         ((run_number++)) 
+        build & 
         unset_depth 
     fi 
     sleep ${INTERVAL} 
