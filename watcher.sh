@@ -49,12 +49,6 @@ function setup () {
     depth=0 
 } 
 
-function unset_depth () { 
-    for ((depth=${max_depth}; depth>0; depth--)); do 
-        unset array2_${depth} 
-    done 
-} 
-
 function watch () { 
     cd "$1" 
     if [ $((++depth)) -gt ${max_depth} ]; then 
@@ -106,14 +100,13 @@ while true; do
     watch "${TARGET_DIR}" 
     if [ ${dir_index} -ne ${max_dir_index:=${dir_index}} ]; then 
         max_dir_index=${dir_index} 
-        unset buffer 
-        unset_depth 
+        unset $(seq ${max_depth} | awk 'NF{print "array2_" $0 }') buffer
         build_flag=0 
     fi 
     if [ 0 -ne ${build_flag:=0} ]; then 
         ((run_number++)) 
         build & 
-        unset_depth 
+        unset $(seq ${max_depth} | awk 'NF{print "array2_" $0 }') 
     fi 
     sleep ${INTERVAL} 
 done 
