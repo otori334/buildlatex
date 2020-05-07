@@ -1,5 +1,8 @@
 #!/bin/bash 
 
+# 空白を含む名前を扱う 
+ORI_IFS=${IFS} IFS=$'\n' 
+# 監視間隔を秒で指定 
 readonly INTERVAL=1 
 readonly DEST_DIRNAME="dest" 
 readonly CACHE_DIRNAME="cache" 
@@ -23,10 +26,6 @@ function input_array2 () {
 
 function output_array2 () { 
     eval echo '${array2_'$1'['$2']}' 
-} 
-
-function max_array2 () { 
-    eval echo '"${#'array2_$1'[*]}"' 
 } 
 
 if [ ${INTERVAL} -gt 1 ]; then 
@@ -78,8 +77,7 @@ function build () {
     mkdir -p "${BUILD_DIR}" 
     cp -R "${CACHE_DIR}/${TARGET_DIRNAME}" "${BUILD_DIR}" 2> /dev/null || cp -R "${TARGET_DIR}" "${BUILD_DIR}" 
     for ((depth=${max_depth}; depth>0; depth--)); do 
-        local _max_index="$(max_array2 ${depth})" 
-        for ((index=0; index<${_max_index}; index++)); do 
+        for ((index=0; index<${array2_index["${depth}"]}; index++)); do 
             processing & 
         done 
         # 全部の処理が終わるまで上位の処理に移らないから，同じ重さの処理は深さを揃えた方がいい 
@@ -87,20 +85,16 @@ function build () {
     done 
     rm -rf "${CACHE_DIR}" 
     mv "${BUILD_DIR}" "${CACHE_DIR}/" 
-    echo "${BRANCH_DIR}" 
-    echo "Run number ${run_number} finished" 
+    echo "${BRANCH_DIR}${IFS}Run number ${run_number} finished" 
     exit 
 } 
-
-# 空白を含む名前を扱う 
-ORI_IFS=${IFS} IFS=$'\n' 
 
 while true; do 
     setup 
     watch "${TARGET_DIR}" 
     if [ ${dir_index} -ne ${max_dir_index:=${dir_index}} ]; then 
         max_dir_index=${dir_index} 
-        unset $(seq ${max_depth} | awk 'NF{print "array2_" $0 }') buffer
+        unset $(seq ${max_depth} | awk 'NF{print "array2_" $0 }') buffer 
         build_flag=0 
     fi 
     if [ 0 -ne ${build_flag:=0} ]; then 
